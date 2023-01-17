@@ -53,8 +53,8 @@
 
 /* Terminal styling */
 .terminal {
-  width: 80%;
-  height: 400px;
+  width: 67%;
+  height: 300px;
   margin: 20px auto;
   background-color: #000;
   color: #fff;
@@ -101,8 +101,7 @@
 /* Dropdown styling */
 .dropdown {
   position: relative;
-  display: inline-block;
-  margin-left: 10px;
+  left: -80px;
 }
 
 .dropdown-content {
@@ -112,6 +111,20 @@
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
+}
+
+.dropdown button {
+  background-color: #6c757d; /* Grey background */
+  color: white; /* White text */
+  padding: 12px; /* Smaller padding */
+  font-size: 14px; /* Smaller font size */
+  border: none; /* Remove border */
+  cursor: pointer; /* Add a pointer cursor on hover */
+  transition: background-color 0.3s ease;
+}
+
+.dropdown button:hover {
+  background-color: #5a6268; /* Add a hover effect to the button */
 }
 
 .dropdown:hover .dropdown-content {
