@@ -7,14 +7,14 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 // sign transaction
 
 export async function connectToExtension() {
-    const extensions = await web3Enable('Subfile')
+    const extensions = await web3Enable("Subfile")
     if(extensions.length === 0) {
         console.log('No extension found.')
     }
     console.log(getAccounts())
 }
 
-async function getAccounts() {
+export async function getAccounts() {
     const accounts = await web3Accounts()
     
     if(accounts.length === 0) {
