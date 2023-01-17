@@ -25,6 +25,14 @@ export async function getAccounts() {
     return accounts;
 }
 
-function selectAccount(position){
-    //TODO 
-}
+export async function populateAccounts() {
+    const optionsList = await getAccounts();
+    const selectElement = document.querySelector("#address-select");
+    optionsList.forEach(function (item) {
+        let address = item.address;
+        const option = document.createElement("option");
+        option.value = address;
+        option.text = address;
+        selectElement.appendChild(option);
+    });
+};

@@ -8,8 +8,13 @@
   <script type="module" src="/src/app/main.js"></script>
 </head>
 
+// very light gray background color #f2f2f2
 <body>
   <div id="taskbar">
+    <div class="status">      
+      <img id="status-icon" src="./images/connected.png" alt="status icon">
+      <span id="status-text">Disconnected</span>
+    </div>
     <div class="dropdown">
       <select id="address-select"></select>
       <div class="dropdown-content">
@@ -18,6 +23,7 @@
   </div>
   <div style="margin-top:70px; display: flex; justify-content: center;">
     <div class="box">
+      <div class="title">Upload</div>
       <div class="upload">
         <input type="file" id="myFile" name="filename">
         <button id="uploadButton">Upload</button>
@@ -27,8 +33,8 @@
       </div>
     </div>
     <div class="box">
+      <div class="title">Retrieve</div>
         <div class="retrieve">
-          <label for="cid">Enter IPFS CID:</label>
           <input type="text" id="cid" name="cid" placeholder="Qm...">
           <button id="retrieveButton">Retrieve</button>
           <div class="result">

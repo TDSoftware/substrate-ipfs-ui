@@ -3,12 +3,32 @@
   padding: 20px;
   width: 100%;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1;
   box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+.status {
+  margin-left: 20px;
+  background-color: #444; /* add background color */
+  border-radius: 5px; /* add rounded corners */
+  display: flex;
+  align-items: center;
+  color: white; /* make the text white */
+  font-family: "Open Sans", sans-serif; /* use sans-serif */
+}
+
+#status-icon {
+  height: 22px;
+  margin-right: 10px;
+  filter: brightness(1.2); /* increase the brightness of the icon */
+}
+
+#status-text {
+  font-size: 16px;
+  font-weight: bold; /* make the text bold */
 }
 
 /* Box styling */
@@ -19,7 +39,8 @@
   margin: 20px;
   width: 40%;
   height: 275px;
-  display: inline-block;
+  display: flex;
+  flex-direction: column; /* change to column to add title */
   text-align: center;
   align-items: center;
   position: relative;
@@ -30,6 +51,15 @@
   font-size: 16px;
 }
 
+.box .title { /* added class for title */
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #000;
+  text-align: center;
+}
 /* File upload mask styling */
 .file-upload-mask {
   position: absolute;
@@ -98,8 +128,8 @@
 
 /* Dropdown styling */
 .dropdown {
-  position: relative;
-  left: -80px;
+  position: fixed;
+  right: 30px;
 }
 
 .dropdown-content {

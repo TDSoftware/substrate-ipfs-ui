@@ -1,7 +1,12 @@
 import extensionService from "./services/extensionService";
 import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
+import { web3FromAddress } from "@polkadot/extension-dapp";
+import { populateAccounts } from "./services/extensionService";
 
+let api;
+let wsProvider;
+let address = document.getElementById("address-select").value;
 
 async function main() {
     addListeners();
@@ -11,8 +16,14 @@ async function main() {
 
     console.log("App started");
 
-    const wsProvider = new WsProvider('ws://127.0.0.1:9944');
-    const api = await ApiPromise.create({ provider: wsProvider });
+    // connecting to the API
+    let wsAddress = 'ws://127.0.0.1:9944'
+    wsProvider = new WsProvider(wsAddress);
+    api = await ApiPromise.create({ provider: wsProvider });
+    console.log(await api.rpc.chain.getHeader());
+    if(api.isConnected) {
+        document.getElementById("status-text").innerHTML = "Connected to " + wsAddress;
+    }
 };
 
 async function uploadFile() {
@@ -33,23 +44,47 @@ async function uploadFile() {
             }
         }
         reader.readAsArrayBuffer(files[0]);
+
+        // make the signed transaction
+        const SENDER = document.getElementById("address-select").value;
+        const injector = await web3FromAddress(SENDER);
+
+        const extrinsicHash = await api.tx.ipfsExample
+        .ipfsAddBytes(fileByteArray)
+        .signAndSend(SENDER, { signer: injector.signer });
+    
+        console.log("Transaction sent: " + extrinsicHash);
+        
+    } else {
+        alert("Failed to load file");
     }
 };
 
+async function retrieveFile() {
+    const SENDER = document.getElementById("address-select").value;
+    const injector = await web3FromAddress(SENDER);
+    const CID = document.getElementById("cid").value;
+    console.log("Trying to retrieve file with CID: " + CID)
+
+    const extrinsicHash = await api.tx.ipfsExample
+    .ipfsCatBytes(CID)
+    .signAndSend(SENDER, { signer: injector.signer });
+
+    console.log("Transaction sent: " + extrinsicHash);
+}
+
+// get extrinsic by extrinsic hash
+
+
 function addListeners() {
     document.getElementById("uploadButton").addEventListener("click", uploadFile);
+    document.getElementById("retrieveButton").addEventListener("click", retrieveFile);
+    document.getElementById("address-select").addEventListener("change", selectAccount);
 };
 
-async function populateAccounts() {
-    const optionsList = await getAccounts();
-    const selectElement = document.querySelector("#address-select");
-    optionsList.forEach(function (item) {
-        let address = item.address;
-        const option = document.createElement("option");
-        option.value = address;
-        option.text = address;
-        selectElement.appendChild(option);
-    });
+function selectAccount() {
+    address = document.getElementById("address-select").value;
+    console.log("Address changed: " + address);
 };
 
 main();
