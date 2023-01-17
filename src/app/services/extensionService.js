@@ -26,6 +26,5 @@ export async function getAccounts() {
 }
 
 function selectAccount(position){
-    const account = this.accounts[position]
-    this.selectedAccount = account
+    //TODO 
 }
