@@ -1,5 +1,6 @@
 import extensionService from "./services/extensionService";
 import { connectToExtension, getAccounts } from "./services/extensionService";
+import { ApiPromise, WsProvider } from "@polkadot/api";
 
 
 async function main() {
@@ -7,12 +8,14 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await connectToExtension();
     await populateAccounts();
+
     console.log("App started");
 
+    const wsProvider = new WsProvider('ws://127.0.0.1:9944');
+    const api = await ApiPromise.create({ provider: wsProvider });
 };
 
-
-function uploadFile() {
+async function uploadFile() {
     var input = document.getElementById("myFile");
     var files = input.files;
 
