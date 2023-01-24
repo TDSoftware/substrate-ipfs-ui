@@ -11,7 +11,7 @@ export async function connectToExtension() {
     if(extensions.length === 0) {
         console.log('No extension found.')
     }
-    console.log(getAccounts())
+    console.log("Connected!")
 }
 
 export async function getAccounts() {
