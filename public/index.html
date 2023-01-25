@@ -11,8 +11,12 @@
 <body>
   <div id="taskbar">
     <div class="status">      
-      <img id="status-icon" src="./images/connected.png" alt="status icon">
+      <img id="status-icon" src="https://cdn-icons-png.flaticon.com/512/190/190411.png">
       <span id="status-text">Disconnected</span>
+      <div id="ws-address-container">
+        <input type="text" id="ws-address" value="ws://127.0.0.1:9944">
+        <button id="change-ws-address">Change</button>
+      </div>
     </div>
     <div class="dropdown">
       <select id="address-select"></select>

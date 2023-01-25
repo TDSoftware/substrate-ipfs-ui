@@ -1,4 +1,3 @@
-import extensionService from "./services/extensionService";
 import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
@@ -13,18 +12,30 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await connectToExtension();
     await populateAccounts();
-
+    await createNodeConnection("ws://127.0.0.1:9944");
     console.log("App started");
-
-    // connecting to the API
-    let wsAddress = 'ws://127.0.0.1:9944'
-    wsProvider = new WsProvider(wsAddress);
-    api = await ApiPromise.create({ provider: wsProvider });
-    console.log(await api.rpc.chain.getHeader());
-    if(api.isConnected) {
-        document.getElementById("status-text").innerHTML = "Connected to " + wsAddress;
-    }
 };
+
+async function createNodeConnection(address) {
+    try {
+        wsProvider = new WsProvider(address);
+        api = await ApiPromise.create({provider: wsProvider});
+        document.getElementById("status-icon").setAttribute("src", "https://cdn-icons-png.flaticon.com/512/190/190411.png");
+        document.getElementById("status-text").innerHTML = "Connected to ";
+        document.getElementById("ws-address").value = address;
+        console.log("Connected to " + address);
+    } catch (error) {
+        document.getElementById("status-icon").src = "https://cdn-icons-png.flaticon.com/512/3389/3389152.png"
+        document.getElementById("status-text").innerHTML = "Disconnected";
+        api.disconnect();
+        console.log("Connecting failed to: " + address+ ". Api has been disconnected."); 
+    }
+}
+
+async function changeConnection() {
+    const wsAddress = document.getElementById("ws-address").value;
+    await createNodeConnection(wsAddress);
+}
 
 async function uploadFile() {
     var input = document.getElementById("myFile");
@@ -80,6 +91,7 @@ function addListeners() {
     document.getElementById("uploadButton").addEventListener("click", uploadFile);
     document.getElementById("retrieveButton").addEventListener("click", retrieveFile);
     document.getElementById("address-select").addEventListener("change", selectAccount);
+    document.getElementById("change-ws-address").addEventListener("click", changeConnection);
 };
 
 function selectAccount() {
