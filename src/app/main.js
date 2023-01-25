@@ -1,3 +1,4 @@
+import { web3Accounts, web3Enable, web3FromSource } from '@polkadot/extension-dapp'
 import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
@@ -12,12 +13,16 @@ let address = document.getElementById("address-select").value;
 const defaultWsAddress = "ws://127.0.0.1:9944";
 
 async function main() {
+    // create connection to node and listen to new blocks
+    await createNodeConnection(defaultWsAddress, api);
+    await listenToBlocks();
     addListeners();
+
+    // connect polkadot js extension
     await new Promise((resolve) => setTimeout(resolve, 300));
     await connectToExtension();
     await populateAccounts();
-    await createNodeConnection(defaultWsAddress, api);
-    await listenToBlocks();
+
     console.log("App started");
 };
 
@@ -26,6 +31,15 @@ async function listenToBlocks() {
     const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
         document.getElementById("block-number").innerHTML = header.number;
         console.log(`Chain is at block: #${header.number}`);
+        api.query.system.events((events) => {
+            events.forEach((record) => {
+                const { event, phase } = record;
+                if (event.section === "ipfsExample") {
+                    console.log(JSON.stringify(JSON.parse(event)));
+                }
+            });
+        });
+        
     });
 }
 
@@ -138,8 +152,20 @@ function addListeners() {
     document.getElementById("change-ws-address").addEventListener("click", changeConnection);
 };
 
+export async function getBalance(address) {
+    const accounts = await web3Accounts()
+    const account = accounts.find((a) => a.address === address)
+    if (!account) {
+        console.log('Account not found.')
+    } else {
+        const balance = await api.query.system.account(account.address)
+        console.log("Balance of user is: " + balance.data.free.toHuman())
+    }
+}
+
 function selectAccount() {
     address = document.getElementById("address-select").value;
+    getBalance(address);
     console.log("Address changed: " + address);
 };
 
