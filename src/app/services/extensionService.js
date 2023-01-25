@@ -36,3 +36,10 @@ export async function populateAccounts() {
         selectElement.appendChild(option);
     });
 };
+
+export async function listenToBlocks() {
+    const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
+        document.getElementById("block-number").innerHTML = header.number;
+        console.log(`Chain is at block: #${header.number}`);
+    });
+}

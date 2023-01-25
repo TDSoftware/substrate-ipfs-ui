@@ -3,25 +3,38 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { populateAccounts } from "./services/extensionService";
 
+// necessary variables for connecting to the node via polkadotjs
 let wsProvider;
 let api;
 let address = document.getElementById("address-select").value;
+
+// constants
+const defaultWsAddress = "ws://127.0.0.1:9944";
 
 async function main() {
     addListeners();
     await new Promise((resolve) => setTimeout(resolve, 300));
     await connectToExtension();
     await populateAccounts();
-    await createNodeConnection("ws://127.0.0.1:9944", api);
+    await createNodeConnection(defaultWsAddress, api);
+    await listenToBlocks();
     console.log("App started");
 };
+
+// function that listens to new blocks and logs them to the console
+async function listenToBlocks() {
+    const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
+        document.getElementById("block-number").innerHTML = header.number;
+        console.log(`Chain is at block: #${header.number}`);
+    });
+}
 
 async function createNodeConnection(address) {
     try {
         wsProvider = new WsProvider(address);
         api = await ApiPromise.create({ provider: wsProvider });
         document.getElementById("status-icon").setAttribute("src", "https://cdn-icons-png.flaticon.com/512/190/190411.png");
-        document.getElementById("status-text").innerHTML = "Connected to ";
+        document.getElementById("status-text").innerHTML = "Connected to: ";
         document.getElementById("ws-address").value = address;
         console.log("Connected to " + address);
     } catch (error) {
