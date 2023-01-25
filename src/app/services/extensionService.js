@@ -8,16 +8,16 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
 export async function connectToExtension() {
     const extensions = await web3Enable("Subfile")
-    if(extensions.length === 0) {
+    if (extensions.length === 0) {
         console.log('No extension found.')
     }
-    console.log(getAccounts())
+    console.log("Connected!")
 }
 
 export async function getAccounts() {
     const accounts = await web3Accounts()
-    
-    if(accounts.length === 0) {
+
+    if (accounts.length === 0) {
         console.log('No accounts found.')
     } else {
         console.log(accounts)
@@ -25,6 +25,21 @@ export async function getAccounts() {
     return accounts;
 }
 
-function selectAccount(position){
-    //TODO 
+export async function populateAccounts() {
+    const optionsList = await getAccounts();
+    const selectElement = document.querySelector("#address-select");
+    optionsList.forEach(function (item) {
+        let address = item.address;
+        const option = document.createElement("option");
+        option.value = address;
+        option.text = address;
+        selectElement.appendChild(option);
+    });
+};
+
+export async function listenToBlocks() {
+    const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
+        document.getElementById("block-number").innerHTML = header.number;
+        console.log(`Chain is at block: #${header.number}`);
+    });
 }

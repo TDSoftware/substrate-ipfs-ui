@@ -1,50 +1,57 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Substrate IPFS</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="/src/app/main.js"></script>
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <title>Subfile</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script type="module" src="/src/app/main.js"></script>
-</head>
-
-<body>
-  <div id="taskbar">
-    <div class="dropdown">
-      <select id="address-select"></select>
-      <div class="dropdown-content">
-      </div>
-    </div>
-  </div>
-  <div style="margin-top:70px; display: flex; justify-content: center;">
-    <div class="box">
-      <div class="upload">
-        <input type="file" id="myFile" name="filename">
-        <button id="uploadButton">Upload</button>
-        <div class="result">
-          <p id="resultMessage"></p>
+  <body>
+    <div id="taskbar">
+      <div class="status">
+        <img
+          id="status-icon"
+          src="https://cdn-icons-png.flaticon.com/512/190/190411.png"
+        />
+        <span id="status-text">Disconnected</span>
+        <div id="ws-address-container">
+          <input type="text" id="ws-address" value="ws://127.0.0.1:9944" />
+          <button id="change-ws-address">Change</button>
         </div>
       </div>
+      <div id="block-square" class="block-square">
+        <p id="block-number"></p>
+      </div>
+      <div class="dropdown">
+        <select id="address-select"></select>
+        <div class="dropdown-content"></div>
+      </div>
     </div>
-    <div class="box">
+    <div style="margin-top: 70px; display: flex; justify-content: center">
+      <div class="box">
+        <div class="title">Upload</div>
+        <div class="upload">
+          <input type="file" id="myFile" name="filename" />
+          <button id="uploadButton">Upload</button>
+          <div class="result" id="uploadResultMessage"></div>
+        </div>      
+      </div>
+      <div class="box">
+        <div class="title">Retrieve</div>
         <div class="retrieve">
-          <label for="cid">Enter IPFS CID:</label>
-          <input type="text" id="cid" name="cid" placeholder="Qm...">
+          <input type="text" id="cid" name="cid" placeholder="Qm..." />
           <button id="retrieveButton">Retrieve</button>
-          <div class="result">
-            <p id="resultMessage"></p>
-          </div>
+          <div class="result" id="retrieveResultMessage"></div>
         </div>
+      </div>
     </div>
-  </div>
-  <div class="terminal">
-    <div class="terminal-taskbar">
-      <div class="dot red"></div>
-      <div class="dot orange"></div>
-      <div class="dot green"></div>
+    <div class="terminal">
+      <div class="terminal-taskbar">
+        <div class="dot red"></div>
+        <div class="dot orange"></div>
+        <div class="dot green"></div>
+      </div>
     </div>
-  </div>
-  
-</body>
-
+  </body>
 </html>
