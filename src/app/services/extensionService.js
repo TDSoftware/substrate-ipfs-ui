@@ -8,7 +8,7 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
 export async function connectToExtension() {
     const extensions = await web3Enable("Subfile")
-    if(extensions.length === 0) {
+    if (extensions.length === 0) {
         console.log('No extension found.')
     }
     console.log("Connected!")
@@ -16,8 +16,8 @@ export async function connectToExtension() {
 
 export async function getAccounts() {
     const accounts = await web3Accounts()
-    
-    if(accounts.length === 0) {
+
+    if (accounts.length === 0) {
         console.log('No accounts found.')
     } else {
         console.log(accounts)
