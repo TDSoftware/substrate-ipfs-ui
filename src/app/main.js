@@ -66,12 +66,13 @@ async function uploadFile() {
 
             console.log("Transaction sent: " + extrinsicHash);
             printResult("Transaction sent: " + extrinsicHash, "upload", true);
-
+            document.getElementById("myFile").value = "";
         } else {
             alert("Failed to load file");
         }
     } catch (error) {
         printResult("Failed to upload file: " + error, "upload", false);
+        document.getElementById("myFile").value = "";
     }
 };
 
