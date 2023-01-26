@@ -28,18 +28,32 @@ async function main() {
 
 // function that listens to new blocks and logs them to the console
 async function listenToBlocks() {
-    const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
-        document.getElementById("block-number").innerHTML = header.number;
-        console.log(`Chain is at block: #${header.number}`);
+    const unsubscribe = await api.rpc.chain.subscribeFinalizedHeads(async (header) => {
+        const blockNumber = header.number;
+        document.getElementById("block-number").innerHTML = blockNumber;
+        console.log(`Chain is at block: #${blockNumber}`);
+
+        // get the pending extrinsic => if there are any, log them to the console
+        await api.rpc.author.pendingExtrinsics().then((extrinsics) => {
+            if (extrinsics.length > 0) {
+                console.log("Pending extrinsics: ");
+                extrinsics.forEach((extrinsic) => {
+                    let encoded = extrinsic.toHuman();
+                    console.log(encoded);
+                });
+            }
+        });
+
         api.query.system.events((events) => {
             events.forEach((record) => {
                 const { event, phase } = record;
-                if (event.section === "ipfsExample") {
-                    console.log(JSON.stringify(JSON.parse(event)));
+                if (event.section === "ipfsExample" && event.method === "AddedCid") {
+                    let decoded = new TextDecoder().decode(event.data[1]);
+                    let identifier = event.data[0].toString();
+                    console.log(identifier + ". " + decoded);
                 }
             });
         });
-        
     });
 }
 
@@ -89,10 +103,13 @@ async function uploadFile() {
 
             const extrinsicHash = await api.tx.ipfsExample
                 .ipfsAddBytes(fileByteArray)
-                .signAndSend(SENDER, { signer: injector.signer });
+                .signAndSend(SENDER, { signer: injector.signer }, (status) => {
+                    console.log(status.toHuman());
+                    console.log(`Extrinsic status: ${status.status}`);
+                    printResult(status.status, "upload", true);
+                });
 
-            console.log("Transaction sent: " + extrinsicHash);
-            printResult("Transaction sent: " + extrinsicHash, "upload", true);
+            //reset the file input
             document.getElementById("myFile").value = "";
         } else {
             alert("Failed to load file");
@@ -102,6 +119,27 @@ async function uploadFile() {
         document.getElementById("myFile").value = "";
     }
 };
+
+async function retrieveFile() {
+    try {
+        const SENDER = document.getElementById("address-select").value;
+        const injector = await web3FromAddress(SENDER);
+        const CID = document.getElementById("cid").value;
+        console.log("Trying to retrieve file with CID: " + CID)
+
+        const extrinsicHash = await api.tx.ipfsExample
+            .ipfsCatBytes(CID)
+            .signAndSend(SENDER, { signer: injector.signer }, (status) => {
+                console.log(status.toHuman());
+                console.log(`Extrinsic status: ${status.status}`);
+                printResult(status.status, "retrieve", true);
+            });
+        document.getElementById("cid").value = "";
+    } catch (error) {
+        printResult("Failed to retrieve file: " + error, "retrieve", false);
+        document.getElementById("cid").value = "";
+    }
+}
 
 function printResult(message, box, success) {
     switch (box) {
@@ -122,28 +160,6 @@ function printResult(message, box, success) {
         resultBox.classList.remove("success");
     }
 }
-
-async function retrieveFile() {
-    try {
-
-        const SENDER = document.getElementById("address-select").value;
-        const injector = await web3FromAddress(SENDER);
-        const CID = document.getElementById("cid").value;
-        console.log("Trying to retrieve file with CID: " + CID)
-
-        const extrinsicHash = await api.tx.ipfsExample
-            .ipfsCatBytes(CID)
-            .signAndSend(SENDER, { signer: injector.signer });
-
-        printResult("Transaction sent: " + extrinsicHash, "retrieve", true);
-
-    } catch (error) {
-        printResult("Failed to retrieve file: " + error, "retrieve", false);
-    }
-}
-
-// get extrinsic by extrinsic hash
-
 
 function addListeners() {
     document.getElementById("uploadButton").addEventListener("click", uploadFile);
