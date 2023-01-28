@@ -97,49 +97,6 @@
   text-align: center
 }
 
-.terminal {
-  width: 67%;
-  height: 300px;
-  margin: 20px auto;
-  background-color: #000;
-  color: #fff;
-  padding: 20px;
-  overflow: scroll;
-  position: relative;
-  font-family: Monaco, monospace
-}
-
-.terminal-taskbar {
-  background-color: #333;
-  color: #fff;
-  padding: 10px;
-  position: absolute;
-  top: 0;
-  left: -4px;
-  width: 100%;
-  display: flex;
-  align-items: center
-}
-
-.terminal-taskbar .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 5px
-}
-
-.terminal-taskbar .dot.green {
-  background-color: #00b894
-}
-
-.terminal-taskbar .dot.orange {
-  background-color: #fdcb6e
-}
-
-.terminal-taskbar .dot.red {
-  background-color: #d63031
-}
-
 .dropdown {
   position: fixed;
   right: 30px
@@ -374,4 +331,85 @@ label {
 #myFile {
   width: 80%;
   height: 50px
+}
+
+.file-list {
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin: 20px auto;
+  width: 67%;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  position: relative;
+  border-radius: 10px;
+  box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.2);
+  color: #333;
+  font-family: "Open Sans", sans-serif;
+  font-size: 16px;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+
+/* added */
+.file-list-taskbar {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* added */
+.file-list-taskbar .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+/* added */
+.file-list-taskbar .dot.green {
+  background-color: #00b894;
+}
+
+.file-list-taskbar .dot.orange {
+  background-color: #fdcb6e;
+}
+
+.file-list-taskbar .dot.red {
+  background-color: #d63031;
+}
+
+.file-list .title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #000;
+  text-align: center;
+}
+
+.file-item {
+  margin-bottom: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing:border-box;
+}
+
+.cid {
+  font-weight: bold;
 }

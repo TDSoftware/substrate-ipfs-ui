@@ -3,6 +3,7 @@ import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { populateAccounts } from "./services/extensionService";
+import { initializeDatabase } from './services/indexingService';
 
 // necessary variables for connecting to the node via polkadotjs
 let wsProvider;
@@ -16,15 +17,64 @@ async function main() {
     // create connection to node and listen to new blocks
     await createNodeConnection(defaultWsAddress, api);
     await listenToBlocks();
+    initializeDatabase();
     addListeners();
 
     // connect polkadot js extension
     await new Promise((resolve) => setTimeout(resolve, 300));
     await connectToExtension();
     await populateAccounts();
-
     console.log("App started");
+    // get the latest block number
+
+    // indexing experiment
+    const latestBlockHash = await api.rpc.chain.getFinalizedHead();
+    const block = await api.rpc.chain.getBlock(latestBlockHash);
+    await indexChain(block.block.header.number, 1);
 };
+
+
+function addFileToFileList(cid, block) {
+    let fileList = document.querySelector(".file-list");
+    let newFileItem = document.createElement("div");
+    newFileItem.classList.add("file-item");
+
+    let newCID = document.createElement("div");
+    newCID.classList.add("cid");
+    newCID.innerText = cid;
+
+    let newBlock = document.createElement("div");
+    newBlock.classList.add("block");
+    newBlock.innerText = "Block: " + block;
+
+    newFileItem.appendChild(newCID);
+    newFileItem.appendChild(newBlock);
+    fileList.appendChild(newFileItem);
+}
+
+
+export async function indexChain(from, to) {
+    const startHash = await api.rpc.chain.getBlockHash(from);
+    readBlock(startHash.toString(), from, to);
+}
+
+async function readBlock(blockHash, from, to) {
+    let block = await api.rpc.chain.getBlock(blockHash);
+    block.block.extrinsics.forEach((extrinsic) => {
+        let encoded = extrinsic.toHuman();
+        console.log(encoded.method)
+        if(encoded.method.section == "ipfsExample" && encoded.method.method == "ocwCallback") {
+            console.log("hallo")
+            let cid = encoded.method.args.data;
+            addFileToFileList(cid, block.block.header.number);
+        }
+    });
+    if (block.block.header.number.toNumber() >= to) readBlock(block.block.header.parentHash.toString(), from, to);
+    else {
+        console.log(new Date());
+        return;
+    }
+}
 
 // function that listens to new blocks and logs them to the console
 async function listenToBlocks() {
