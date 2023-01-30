@@ -52,26 +52,35 @@ function addFileToFileList(cid, block) {
     fileList.appendChild(newFileItem);
 }
 
-
 export async function indexChain(from, to) {
     const startHash = await api.rpc.chain.getBlockHash(from);
     readBlock(startHash.toString(), from, to);
+    document.querySelector(".file-list-title").innerText = "ADDED FILES (Indexing...)";
 }
 
 async function readBlock(blockHash, from, to) {
     let block = await api.rpc.chain.getBlock(blockHash);
-    block.block.extrinsics.forEach((extrinsic) => {
-        let encoded = extrinsic.toHuman();
-        console.log(encoded.method)
-        if(encoded.method.section == "ipfsExample" && encoded.method.method == "ocwCallback") {
-            console.log("hallo")
-            let cid = encoded.method.args.data;
-            addFileToFileList(cid, block.block.header.number);
+    const apiAt = await api.at(blockHash);
+    const blockEvents = await apiAt.query.system.events();
+
+    // if the address matches the selected one, add the cid to the file list
+    blockEvents.forEach((record) => {
+        const { event, phase } = record;
+        if (event.section === "ipfs" && event.method === "AddedCid") {
+            let uploaderAddress = event.data[0];
+            let cid = new TextDecoder().decode(event.data[1]);
+            console.log(event.data[0] == address)
+            if(uploaderAddress == address) {
+                addFileToFileList(cid, block.block.header.number);
+            }
         }
     });
+
+    // ensure to run the condition as long as there are blocks to read
     if (block.block.header.number.toNumber() >= to) readBlock(block.block.header.parentHash.toString(), from, to);
     else {
-        console.log(new Date());
+        console.log("Indexing finished at: " + new Date());
+        document.querySelector(".file-list-title").innerText = "ADDED FILES";
         return;
     }
 }
@@ -83,24 +92,13 @@ async function listenToBlocks() {
         document.getElementById("block-number").innerHTML = blockNumber;
         console.log(`Chain is at block: #${blockNumber}`);
 
-        // get the pending extrinsic => if there are any, log them to the console
-        await api.rpc.author.pendingExtrinsics().then((extrinsics) => {
-            if (extrinsics.length > 0) {
-                console.log("Pending extrinsics: ");
-                extrinsics.forEach((extrinsic) => {
-                    let encoded = extrinsic.toHuman();
-                    console.log(encoded);
-                });
-            }
-        });
-
         api.query.system.events((events) => {
             events.forEach((record) => {
                 const { event, phase } = record;
-                if (event.section === "ipfsExample" && event.method === "AddedCid") {
+                if (event.section === "ipfs" && event.method === "AddedCid") {
                     let decoded = new TextDecoder().decode(event.data[1]);
-                    let identifier = event.data[0].toString();
-                    console.log(identifier + ". " + decoded);
+                    console.log("User with address " + event.data[0] + " added a CID " +  decoded + " at Block " + blockNumber);
+                    addFileToFileList(decoded, blockNumber);
                 }
             });
         });
@@ -151,7 +149,7 @@ async function uploadFile() {
             const SENDER = document.getElementById("address-select").value;
             const injector = await web3FromAddress(SENDER);
 
-            const extrinsicHash = await api.tx.ipfsExample
+            const extrinsicHash = await api.tx.ipfs
                 .ipfsAddBytes(fileByteArray)
                 .signAndSend(SENDER, { signer: injector.signer }, (status) => {
                     console.log(status.toHuman());
@@ -177,7 +175,7 @@ async function retrieveFile() {
         const CID = document.getElementById("cid").value;
         console.log("Trying to retrieve file with CID: " + CID)
 
-        const extrinsicHash = await api.tx.ipfsExample
+        const extrinsicHash = await api.tx.ipfs
             .ipfsCatBytes(CID)
             .signAndSend(SENDER, { signer: injector.signer }, (status) => {
                 console.log(status.toHuman());

@@ -354,7 +354,6 @@ label {
   overflow-x: hidden;
 }
 
-/* added */
 .file-list-taskbar {
   background-color: #333;
   color: #fff;
@@ -367,7 +366,6 @@ label {
   align-items: center;
 }
 
-/* added */
 .file-list-taskbar .dot {
   width: 8px;
   height: 8px;
@@ -375,7 +373,6 @@ label {
   margin-right: 5px;
 }
 
-/* added */
 .file-list-taskbar .dot.green {
   background-color: #00b894;
 }
@@ -388,7 +385,7 @@ label {
   background-color: #d63031;
 }
 
-.file-list .title {
+.file-list .file-list-title {
   font-size: 24px;
   font-weight: 700;
   margin-top: 15px;
@@ -403,11 +400,12 @@ label {
   margin-bottom: 5px;
   padding: 10px;
   border: 1px solid #ccc;
+  background-color: #fff;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-sizing:border-box;
+  box-sizing: border-box;
 }
 
 .cid {

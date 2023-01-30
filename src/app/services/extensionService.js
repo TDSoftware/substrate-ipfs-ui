@@ -2,10 +2,6 @@
 import { web3Accounts, web3Enable, web3FromSource } from '@polkadot/extension-dapp'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
-// load accounts
-// ask for permission
-// sign transaction
-
 export async function connectToExtension() {
     const extensions = await web3Enable("Subfile")
     if (extensions.length === 0) {
