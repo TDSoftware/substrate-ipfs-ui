@@ -1,7 +1,5 @@
 
 import { web3Accounts, web3Enable, web3FromSource } from '@polkadot/extension-dapp'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-
 export async function connectToExtension() {
     const extensions = await web3Enable("Subfile")
     if (extensions.length === 0) {
@@ -15,8 +13,6 @@ export async function getAccounts() {
 
     if (accounts.length === 0) {
         console.log('No accounts found.')
-    } else {
-        console.log(accounts)
     }
     return accounts;
 }
@@ -32,10 +28,3 @@ export async function populateAccounts() {
         selectElement.appendChild(option);
     });
 };
-
-export async function listenToBlocks() {
-    const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
-        document.getElementById("block-number").innerHTML = header.number;
-        console.log(`Chain is at block: #${header.number}`);
-    });
-}
