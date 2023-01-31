@@ -87,6 +87,13 @@ async function readBlock(blockHash, from, to) {
     }
 }
 
+// function that listens to new blocks and logs them to the console
+async function listenToBlocks() {
+    await api.rpc.chain.subscribeFinalizedHeads(async (header) => {
+        document.getElementById("block-number").innerHTML = header.number;
+    });
+}
+
 async function createNodeConnection(address) {
     try {
         wsProvider = new WsProvider(address);
