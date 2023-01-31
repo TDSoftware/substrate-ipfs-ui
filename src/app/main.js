@@ -3,12 +3,14 @@ import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { populateAccounts } from "./services/extensionService";
-import { initializeDatabase } from './services/indexingService';
+import { initializeDatabase, addFileToDatabase } from './services/indexingService';
 
 // necessary variables for connecting to the node via polkadotjs
-let wsProvider;
-let api;
 let address = document.getElementById("address-select").value;
+let selectedCidVersion = 0;
+let wsProvider;
+let db = null;
+let api;
 
 // constants
 const defaultWsAddress = "ws://127.0.0.1:9944";
@@ -17,7 +19,7 @@ async function main() {
     // create connection to node and listen to new blocks
     await createNodeConnection(defaultWsAddress, api);
     await listenToBlocks();
-    initializeDatabase();
+    db = initializeDatabase();
     addListeners();
 
     // connect polkadot js extension
@@ -25,7 +27,6 @@ async function main() {
     await connectToExtension();
     await populateAccounts();
     console.log("App started");
-    // get the latest block number
 
     // indexing experiment
     const latestBlockHash = await api.rpc.chain.getFinalizedHead();
@@ -49,6 +50,7 @@ function addFileToFileList(cid, block) {
 
     newFileItem.appendChild(newCID);
     newFileItem.appendChild(newBlock);
+
     fileList.appendChild(newFileItem);
 }
 
@@ -70,7 +72,7 @@ async function readBlock(blockHash, from, to) {
             let uploaderAddress = event.data[0];
             let cid = new TextDecoder().decode(event.data[1]);
             console.log(event.data[0] == address)
-            if(uploaderAddress == address) {
+            if (uploaderAddress == address) {
                 addFileToFileList(cid, block.block.header.number);
             }
         }
@@ -83,26 +85,6 @@ async function readBlock(blockHash, from, to) {
         document.querySelector(".file-list-title").innerText = "ADDED FILES";
         return;
     }
-}
-
-// function that listens to new blocks and logs them to the console
-async function listenToBlocks() {
-    const unsubscribe = await api.rpc.chain.subscribeFinalizedHeads(async (header) => {
-        const blockNumber = header.number;
-        document.getElementById("block-number").innerHTML = blockNumber;
-        console.log(`Chain is at block: #${blockNumber}`);
-
-        api.query.system.events((events) => {
-            events.forEach((record) => {
-                const { event, phase } = record;
-                if (event.section === "ipfs" && event.method === "AddedCid") {
-                    let decoded = new TextDecoder().decode(event.data[1]);
-                    console.log("User with address " + event.data[0] + " added a CID " +  decoded + " at Block " + blockNumber);
-                    addFileToFileList(decoded, blockNumber);
-                }
-            });
-        });
-    });
 }
 
 async function createNodeConnection(address) {
@@ -119,11 +101,6 @@ async function createNodeConnection(address) {
         api.disconnect();
         console.log("Connecting failed to: " + address + ". Api has been disconnected.");
     }
-}
-
-async function changeConnection() {
-    const wsAddress = document.getElementById("ws-address").value;
-    await createNodeConnection(wsAddress);
 }
 
 async function uploadFile() {
@@ -145,19 +122,17 @@ async function uploadFile() {
             }
             reader.readAsArrayBuffer(files[0]);
 
-            // make the signed transaction
             const SENDER = document.getElementById("address-select").value;
             const injector = await web3FromAddress(SENDER);
 
-            const extrinsicHash = await api.tx.ipfs
-                .ipfsAddBytes(fileByteArray)
+            await api.tx.ipfs
+                .addBytes(fileByteArray, selectedCidVersion)
                 .signAndSend(SENDER, { signer: injector.signer }, (status) => {
                     console.log(status.toHuman());
                     console.log(`Extrinsic status: ${status.status}`);
                     printResult(status.status, "upload", true);
                 });
 
-            //reset the file input
             document.getElementById("myFile").value = "";
         } else {
             alert("Failed to load file");
@@ -175,8 +150,8 @@ async function retrieveFile() {
         const CID = document.getElementById("cid").value;
         console.log("Trying to retrieve file with CID: " + CID)
 
-        const extrinsicHash = await api.tx.ipfs
-            .ipfsCatBytes(CID)
+        await api.tx.ipfs
+            .catBytes(CID)
             .signAndSend(SENDER, { signer: injector.signer }, (status) => {
                 console.log(status.toHuman());
                 console.log(`Extrinsic status: ${status.status}`);
@@ -209,28 +184,42 @@ function printResult(message, box, success) {
     }
 }
 
+function resetFileList() {
+    let fileList = document.querySelector(".file-list");
+    let fileItems = document.querySelectorAll(".file-item");
+
+    fileItems.forEach(function (fileItem) {
+        fileList.removeChild(fileItem);
+    });
+}
+
+
+/*
+    Listener Stuff
+*/
+
 function addListeners() {
     document.getElementById("uploadButton").addEventListener("click", uploadFile);
     document.getElementById("retrieveButton").addEventListener("click", retrieveFile);
     document.getElementById("address-select").addEventListener("change", selectAccount);
     document.getElementById("change-ws-address").addEventListener("click", changeConnection);
-};
+    document.querySelector(".toggle input[type='checkbox']").addEventListener("change", toggleVersion);
+}
 
-export async function getBalance(address) {
-    const accounts = await web3Accounts()
-    const account = accounts.find((a) => a.address === address)
-    if (!account) {
-        console.log('Account not found.')
-    } else {
-        const balance = await api.query.system.account(account.address)
-        console.log("Balance of user is: " + balance.data.free.toHuman())
-    }
+function toggleVersion() {
+    selectedCidVersion = this.checked ? 1 : 0;
+    console.log("CID version changed to: " + selectedCidVersion);
+}
+
+async function changeConnection() {
+    const wsAddress = document.getElementById("ws-address").value;
+    await createNodeConnection(wsAddress);
 }
 
 function selectAccount() {
     address = document.getElementById("address-select").value;
-    getBalance(address);
     console.log("Address changed: " + address);
+    resetFileList();
 };
 
 main();

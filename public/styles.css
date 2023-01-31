@@ -411,3 +411,51 @@ label {
 .cid {
   font-weight: bold;
 }
+
+.form {
+  display: flex;
+  align-items: center;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 30px;
+  background-color: #ddd;
+  border-radius: 15px;
+  cursor: pointer;
+  margin-left: 10px;
+  position: relative;
+}
+
+.toggle input[type="checkbox"] {
+  display: none;
+}
+
+.toggle .toggle-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-color: #fff;
+  border-radius: 15px;
+  text-align: center;
+  line-height: 30px;
+  color: #333;
+}
+
+.toggle input[type="checkbox"]:checked+.toggle-label {
+  left: 50%;
+  background-color: #4caf50;
+}
+
+.toggle input[type="checkbox"]:checked+.toggle-label:before {
+  content: "v1";
+}
+
+.toggle .toggle-label:before {
+  content: "v0";
+}

@@ -7,8 +7,8 @@ export async function initializeDatabase() {
     )
     const db = new sql.Database();
     createTable(db);
-    console.log(db.exec("SELECT * FROM files"));
-    console.log(db)
+    console.log("Database initialized!")
+    return db;
 }
 
 function createTable(db) {
@@ -16,7 +16,7 @@ function createTable(db) {
     const res = db.exec("SELECT * FROM files");
 }
 
-function addFileToDatabase(db, address, cid, block, wsProvider) {
+export function addFileToDatabase(db, address, cid, block, wsProvider) {
     db.run("INSERT INTO files VALUES (?, ?, ?, ?)", [address, cid, block, wsProvider]);
 }
 
