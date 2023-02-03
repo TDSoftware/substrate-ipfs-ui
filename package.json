@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx parcel public/index.html"
+    "start": "npx parcel public/index.html",
+    "benchmark": "node benchmark.js"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +26,8 @@
   },
   "dependencies": {
     "@polkadot/extension-dapp": "^0.44.8",
+    "file-type": "18.2.0",
+    "magic-bytes.js": "^1.0.13",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.4"
   }

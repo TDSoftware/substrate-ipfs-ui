@@ -2,16 +2,12 @@ import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { populateAccounts } from "./services/extensionService";
-import {
-    initializeDatabase,
-    addFileToDatabase,
-} from "./services/indexingService";
+import { createByteArrayFromFile, createFileFromByteArray } from "./services/fileService";
 
 // necessary variables for connecting to the node via polkadotjs
 let address;
 let selectedCidVersion = 0;
 let wsProvider;
-let db = null;
 let api;
 
 // constants
@@ -20,7 +16,6 @@ const defaultWsAddress = "ws://127.0.0.1:9944";
 async function main() {
     await createNodeConnection(defaultWsAddress, api);
     await listenToBlocks();
-    db = initializeDatabase();
     addListeners();
 
     // connect polkadot js extension
@@ -37,37 +32,7 @@ async function main() {
     await indexChain(block.block.header.number, 1);
 }
 
-function persistAddress() {
-    let storedAddress = localStorage.getItem("address");
-    const select = document.getElementById("address-select");
-    if (!storedAddress) {
-        select.value = select.options[0].text;
-        address = select.options[0].text;
-    } else {
-        address = storedAddress;
-        select.value = storedAddress;
-    }
-}
-
-function addFileToFileList(cid, block) {
-    let fileList = document.querySelector(".file-list");
-    let newFileItem = document.createElement("div");
-    newFileItem.classList.add("file-item");
-
-    let newCID = document.createElement("div");
-    newCID.classList.add("cid");
-    newCID.innerText = cid;
-
-    let newBlock = document.createElement("div");
-    newBlock.classList.add("block");
-    newBlock.innerText = "Block: " + block;
-
-    newFileItem.appendChild(newCID);
-    newFileItem.appendChild(newBlock);
-
-    fileList.appendChild(newFileItem);
-}
-
+// indexing functions
 export async function indexChain(from, to) {
     const startHash = await api.rpc.chain.getBlockHash(from);
     readBlock(startHash.toString(), from, to);
@@ -109,6 +74,7 @@ async function listenToBlocks() {
     });
 }
 
+// extension functions
 async function createNodeConnection(address) {
     try {
         wsProvider = new WsProvider(address);
@@ -133,23 +99,13 @@ async function createNodeConnection(address) {
     }
 }
 
+// transaction functions
 async function uploadFile() {
     var input = document.getElementById("myFile");
     var files = input.files;
     try {
         if (files[0]) {
-            const reader = new FileReader();
-            const fileByteArray = [];
-            reader.onloadend = (evt) => {
-                if (evt.target.readyState === FileReader.DONE) {
-                    const arrayBuffer = evt.target.result,
-                        array = new Uint8Array(arrayBuffer);
-                    for (const a of array) {
-                        fileByteArray.push(a);
-                    }
-                }
-            };
-            reader.readAsArrayBuffer(files[0]);
+            let fileByteArray = await createByteArrayFromFile(files[0]);
 
             const SENDER = document.getElementById("address-select").value;
             const injector = await web3FromAddress(SENDER);
@@ -185,6 +141,20 @@ async function retrieveFile() {
                 printResult(status.status, "retrieve", true);
             });
         document.getElementById("cid").value = "";
+
+        await api.query.system.events((events) => {
+            events.forEach((record) => {
+                const { event, phase } = record;
+                if (event.section === "ipfs" && event.method === "CatBytes") {
+                    let eventData = event.data;
+                    if (CID == decoder(eventData[1])) {
+                        createFileFromByteArray(CID, eventData[2]);
+                        return;
+                    }
+                }
+            });
+        });
+
     } catch (error) {
         printResult("Failed to retrieve file: " + error, "retrieve", false);
         document.getElementById("cid").value = "";
@@ -209,15 +179,6 @@ function printResult(message, box, success) {
         resultBox.classList.add("error");
         resultBox.classList.remove("success");
     }
-}
-
-function resetFileList() {
-    let fileList = document.querySelector(".file-list");
-    let fileItems = document.querySelectorAll(".file-item");
-
-    fileItems.forEach(function (fileItem) {
-        fileList.removeChild(fileItem);
-    });
 }
 
 /*
@@ -257,4 +218,49 @@ function selectAccount() {
     resetFileList();
 }
 
+function addFileToFileList(cid, block) {
+    let fileList = document.querySelector(".file-list");
+    let newFileItem = document.createElement("div");
+    newFileItem.classList.add("file-item");
+
+    let newCID = document.createElement("div");
+    newCID.classList.add("cid");
+    newCID.innerText = cid;
+
+    let newBlock = document.createElement("div");
+    newBlock.classList.add("block");
+    newBlock.innerText = "Block: " + block;
+
+    newFileItem.appendChild(newCID);
+    newFileItem.appendChild(newBlock);
+
+    fileList.appendChild(newFileItem);
+}
+
+function resetFileList() {
+    let fileList = document.querySelector(".file-list");
+    let fileItems = document.querySelectorAll(".file-item");
+
+    fileItems.forEach(function (fileItem) {
+        fileList.removeChild(fileItem);
+    });
+}
+
+function persistAddress() {
+    let storedAddress = localStorage.getItem("address");
+    const select = document.getElementById("address-select");
+    if (!storedAddress) {
+        select.value = select.options[0].text;
+        address = select.options[0].text;
+    } else {
+        address = storedAddress;
+        select.value = storedAddress;
+    }
+}
+
+function decoder(bytes) {
+    return new TextDecoder().decode(bytes);
+}
+
 main();
+
