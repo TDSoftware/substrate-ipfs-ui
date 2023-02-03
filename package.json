@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx parcel public/index.html",
-    "benchmark": "node benchmark.js"
+    "benchmark": "node src/app/benchmark.js"
   },
   "author": "",
   "license": "ISC",
