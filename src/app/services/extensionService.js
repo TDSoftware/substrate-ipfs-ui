@@ -3,16 +3,15 @@ import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
 export async function connectToExtension() {
     const extensions = await web3Enable("Subfile")
     if (extensions.length === 0) {
-        console.log('No extension found.')
+        console.warn('No extension found.')
     }
-    console.log("Connected!")
 }
 
 export async function getAccounts() {
     const accounts = await web3Accounts()
 
     if (accounts.length === 0) {
-        console.log('No accounts found.')
+        console.info('No accounts found.')
     }
     return accounts;
 }

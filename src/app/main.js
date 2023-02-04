@@ -30,7 +30,7 @@ async function main() {
     await populateAccounts();
 
     persistAddress();
-    console.log("App started.");
+    console.info("App started.");
 
     // indexing experiment
     const latestBlockHash = await api.rpc.chain.getFinalizedHead();
@@ -67,7 +67,7 @@ async function readBlock(blockHash, from, to) {
     if (block.block.header.number.toNumber() >= to)
         readBlock(block.block.header.parentHash.toString(), from, to);
     else {
-        console.log("Indexing finished at: " + new Date());
+        console.info("Indexing finished at: " + new Date());
         document.querySelector(".file-list-title").innerText = "ADDED FILES";
         return;
     }
@@ -91,12 +91,12 @@ async function createNodeConnection(address) {
       document.getElementById("status-text").innerHTML = "Connected to: ";
       document.getElementById("ws-address").value = address;
   
-      console.log(`Connected to ${address}`);
+      console.info(`Connected to ${address}`);
     } catch (error) {
       document.getElementById("status-icon").src = imageLinks.disconnectedIcon;
       document.getElementById("status-text").innerHTML = "Disconnected";
       api.disconnect();
-      console.log(`Connecting failed to ${address}. Api has been disconnected.`);
+      console.warn(`Connecting failed to ${address}. Api has been disconnected.`);
     }
   }
   
@@ -115,8 +115,8 @@ async function uploadFile() {
             await api.tx.ipfs
                 .addBytes(fileByteArray, selectedCidVersion)
                 .signAndSend(SENDER, { signer: injector.signer }, (status) => {
-                    console.log(status.toHuman());
-                    console.log(`Extrinsic status: ${status.status}`);
+                    console.info(status.toHuman());
+                    console.info(`Extrinsic status: ${status.status}`);
                     printResult(status.status, "upload", true);
                 });
 
@@ -135,7 +135,7 @@ async function retrieveFile() {
         const SENDER = document.getElementById("address-select").value;
         const injector = await web3FromAddress(SENDER);
         const CID = document.getElementById("cid").value;
-        console.log("Trying to retrieve file with CID: " + CID);
+        console.info("Trying to retrieve file with CID: " + CID);
 
         await api.tx.ipfs
             .catBytes(CID)
@@ -205,7 +205,7 @@ function addListeners() {
 
 function toggleVersion() {
     selectedCidVersion = this.checked ? 1 : 0;
-    console.log("CID version changed to: " + selectedCidVersion);
+    console.info("CID version changed to: " + selectedCidVersion);
 }
 
 async function changeConnection() {
@@ -216,7 +216,7 @@ async function changeConnection() {
 function selectAccount() {
     address = document.getElementById("address-select").value;
     localStorage.setItem("address", address);
-    console.log("Address changed: " + address);
+    console.info("Address changed: " + address);
     resetFileList();
 }
 
