@@ -14,6 +14,7 @@ let api;
 const defaultWsAddress = "ws://127.0.0.1:9944";
 
 async function main() {
+    document.getElementById("toggle").checked = false;
     await createNodeConnection(defaultWsAddress, api);
     await listenToBlocks();
     addListeners();
