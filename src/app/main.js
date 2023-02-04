@@ -2,19 +2,20 @@ import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { populateAccounts } from "./services/extensionService";
-import { createByteArrayFromFile, createFileFromByteArray } from "./services/fileService";
+import { createByteArrayFromFile, createFileFromByteArray, decoder } from "./services/fileService";
 
 // necessary variables for connecting to the node via polkadotjs
 let address;
 let selectedCidVersion = 0;
 let wsProvider;
 let api;
+document.querySelector(".toggle input[type='checkbox']").checked = false;
+
 
 // constants
 const defaultWsAddress = "ws://127.0.0.1:9944";
 
 async function main() {
-    document.getElementById("toggle").checked = false;
     await createNodeConnection(defaultWsAddress, api);
     await listenToBlocks();
     addListeners();
@@ -257,10 +258,6 @@ function persistAddress() {
         address = storedAddress;
         select.value = storedAddress;
     }
-}
-
-function decoder(bytes) {
-    return new TextDecoder().decode(bytes);
 }
 
 main();

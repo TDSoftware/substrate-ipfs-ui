@@ -45,3 +45,7 @@ function getExtension(mimeType) {
 function getByteArrayMimeType(byteArray) {
     return filetypemime(byteArray)[0];
 }
+
+export function decoder(bytes) {
+    return new TextDecoder().decode(bytes);
+}
