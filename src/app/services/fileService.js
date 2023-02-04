@@ -36,7 +36,7 @@ function getExtension(mimeType) {
     const mimeDefinition = mimeDefinitions[mimeType];
     console.log("mimeDefinition: " + mimeDefinition);
     if (!mimeDefinition) {
-      return '';
+        return '.txt';
     }
     return `.${mimeDefinition.extensions[0]}`;
 }

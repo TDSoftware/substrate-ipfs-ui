@@ -102,10 +102,10 @@ async function createNodeConnection(address) {
 // transaction functions
 async function uploadFile() {
     var input = document.getElementById("myFile");
-    var files = input.files;
+    var file = input.files[0];
     try {
-        if (files[0]) {
-            let fileByteArray = await createByteArrayFromFile(files[0]);
+        if (file) {
+            let fileByteArray = await createByteArrayFromFile(file);
 
             const SENDER = document.getElementById("address-select").value;
             const injector = await web3FromAddress(SENDER);
@@ -113,9 +113,14 @@ async function uploadFile() {
             await api.tx.ipfs
                 .addBytes(fileByteArray, selectedCidVersion)
                 .signAndSend(SENDER, { signer: injector.signer }, (status) => {
-                    console.info(status.toHuman());
-                    console.info(`Extrinsic status: ${status.status}`);
-                    printResult(status.status, "upload", true);
+                    const result = status.status;
+                    let key = "Ready";
+                    try {
+                        key = Object.keys(JSON.parse(result))[0].charAt(0).toUpperCase() + Object.keys(JSON.parse(result))[0].slice(1);
+                    } catch (e) {
+                        console.warn("Failed to parse status: " + e);
+                    }
+                    printResult(key, "upload", true);
                 });
 
             document.getElementById("myFile").value = "";
@@ -138,8 +143,16 @@ async function retrieveFile() {
         await api.tx.ipfs
             .catBytes(CID)
             .signAndSend(SENDER, { signer: injector.signer }, (status) => {
-                printResult(status.status, "retrieve", true);
+                const result = status.status;
+                let key = "Ready";
+                try {
+                    key = Object.keys(JSON.parse(result))[0].charAt(0).toUpperCase() + Object.keys(JSON.parse(result))[0].slice(1);
+                } catch (e) {
+                    console.warn("Failed to parse status: " + e);
+                }
+                printResult(key, "retrieve", true);
             });
+
         document.getElementById("cid").value = "";
 
         await api.query.system.events((events) => {
