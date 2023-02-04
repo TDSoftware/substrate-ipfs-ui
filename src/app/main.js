@@ -3,17 +3,21 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { populateAccounts } from "./services/extensionService";
 import { createByteArrayFromFile, createFileFromByteArray, decoder } from "./services/fileService";
+import { addFileToFileList, resetFileList, updateStatusUI } from "./services/interfaceService";
+import imageLinks from "./data/images.json";
+
 
 // necessary variables for connecting to the node via polkadotjs
 let address;
 let selectedCidVersion = 0;
 let wsProvider;
 let api;
-document.querySelector(".toggle input[type='checkbox']").checked = false;
-
 
 // constants
 const defaultWsAddress = "ws://127.0.0.1:9944";
+
+// reset UI on page load
+document.querySelector(".toggle input[type='checkbox']").checked = false;
 
 async function main() {
     await createNodeConnection(defaultWsAddress, api);
@@ -79,28 +83,24 @@ async function listenToBlocks() {
 // extension functions
 async function createNodeConnection(address) {
     try {
-        wsProvider = new WsProvider(address);
-        api = await ApiPromise.create({ provider: wsProvider });
-        document
-            .getElementById("status-icon")
-            .setAttribute(
-                "src",
-                "https://cdn-icons-png.flaticon.com/512/190/190411.png"
-            );
-        document.getElementById("status-text").innerHTML = "Connected to: ";
-        document.getElementById("ws-address").value = address;
-        console.log("Connected to " + address);
+      wsProvider = new WsProvider(address);
+      api = await ApiPromise.create({ provider: wsProvider });
+  
+      const statusIcon = document.getElementById("status-icon");
+      statusIcon.src = imageLinks.connectedIcon;
+      document.getElementById("status-text").innerHTML = "Connected to: ";
+      document.getElementById("ws-address").value = address;
+  
+      console.log(`Connected to ${address}`);
     } catch (error) {
-        document.getElementById("status-icon").src =
-            "https://cdn-icons-png.flaticon.com/512/3389/3389152.png";
-        document.getElementById("status-text").innerHTML = "Disconnected";
-        api.disconnect();
-        console.log(
-            "Connecting failed to: " + address + ". Api has been disconnected."
-        );
+      document.getElementById("status-icon").src = imageLinks.disconnectedIcon;
+      document.getElementById("status-text").innerHTML = "Disconnected";
+      api.disconnect();
+      console.log(`Connecting failed to ${address}. Api has been disconnected.`);
     }
-}
-
+  }
+  
+  
 // transaction functions
 async function uploadFile() {
     var input = document.getElementById("myFile");
@@ -218,34 +218,6 @@ function selectAccount() {
     localStorage.setItem("address", address);
     console.log("Address changed: " + address);
     resetFileList();
-}
-
-function addFileToFileList(cid, block) {
-    let fileList = document.querySelector(".file-list");
-    let newFileItem = document.createElement("div");
-    newFileItem.classList.add("file-item");
-
-    let newCID = document.createElement("div");
-    newCID.classList.add("cid");
-    newCID.innerText = cid;
-
-    let newBlock = document.createElement("div");
-    newBlock.classList.add("block");
-    newBlock.innerText = "Block: " + block;
-
-    newFileItem.appendChild(newCID);
-    newFileItem.appendChild(newBlock);
-
-    fileList.appendChild(newFileItem);
-}
-
-function resetFileList() {
-    let fileList = document.querySelector(".file-list");
-    let fileItems = document.querySelectorAll(".file-item");
-
-    fileItems.forEach(function (fileItem) {
-        fileList.removeChild(fileItem);
-    });
 }
 
 function persistAddress() {
