@@ -27,15 +27,3 @@ export async function populateAccounts() {
         selectElement.appendChild(option);
     });
 };
-
-function persistAddress() {
-    let storedAddress = localStorage.getItem("address");
-    const select = document.getElementById("address-select");
-    if (!storedAddress) {
-        select.value = select.options[0].text;
-        address = select.options[0].text;
-    } else {
-        address = storedAddress;
-        select.value = storedAddress;
-    }
-}

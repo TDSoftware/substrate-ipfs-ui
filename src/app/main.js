@@ -1,11 +1,10 @@
 import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
-import { populateAccounts } from "./services/extensionService";
+import { populateAccounts, changeConnection } from "./services/extensionService";
 import { createByteArrayFromFile, createFileFromByteArray, decoder } from "./services/fileService";
 import { addFileToFileList, resetFileList, updateStatusUI } from "./services/interfaceService";
 import imageLinks from "./data/images.json";
-
 
 // necessary variables for connecting to the node via polkadotjs
 let address;
@@ -39,7 +38,7 @@ async function main() {
 }
 
 // indexing functions
-export async function indexChain(from, to) {
+async function indexChain(from, to) {
     const startHash = await api.rpc.chain.getBlockHash(from);
     readBlock(startHash.toString(), from, to);
     document.querySelector(".file-list-title").innerText =
@@ -83,24 +82,23 @@ async function listenToBlocks() {
 // extension functions
 async function createNodeConnection(address) {
     try {
-      wsProvider = new WsProvider(address);
-      api = await ApiPromise.create({ provider: wsProvider });
-  
-      const statusIcon = document.getElementById("status-icon");
-      statusIcon.src = imageLinks.connectedIcon;
-      document.getElementById("status-text").innerHTML = "Connected to: ";
-      document.getElementById("ws-address").value = address;
-  
-      console.info(`Connected to ${address}`);
+        wsProvider = new WsProvider(address);
+        api = await ApiPromise.create({ provider: wsProvider });
+
+        const statusIcon = document.getElementById("status-icon");
+        statusIcon.src = imageLinks.connectedIcon;
+        document.getElementById("status-text").innerHTML = "Connected to: ";
+        document.getElementById("ws-address").value = address;
+
+        console.info(`Connected to ${address}`);
     } catch (error) {
-      document.getElementById("status-icon").src = imageLinks.disconnectedIcon;
-      document.getElementById("status-text").innerHTML = "Disconnected";
-      api.disconnect();
-      console.warn(`Connecting failed to ${address}. Api has been disconnected.`);
+        document.getElementById("status-icon").src = imageLinks.disconnectedIcon;
+        document.getElementById("status-text").innerHTML = "Disconnected";
+        api.disconnect();
+        console.warn(`Connecting failed to ${address}. Api has been disconnected.`);
     }
-  }
-  
-  
+}
+
 // transaction functions
 async function uploadFile() {
     var input = document.getElementById("myFile");
@@ -187,6 +185,11 @@ function printResult(message, box, success) {
     Listener Stuff
 */
 
+export async function changeConnection() {
+    const wsAddress = document.getElementById("ws-address").value;
+    await createNodeConnection(wsAddress);
+}
+
 function addListeners() {
     document.getElementById("uploadButton").addEventListener("click", uploadFile);
     document
@@ -206,11 +209,6 @@ function addListeners() {
 function toggleVersion() {
     selectedCidVersion = this.checked ? 1 : 0;
     console.info("CID version changed to: " + selectedCidVersion);
-}
-
-async function changeConnection() {
-    const wsAddress = document.getElementById("ws-address").value;
-    await createNodeConnection(wsAddress);
 }
 
 function selectAccount() {
