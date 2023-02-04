@@ -1,9 +1,9 @@
 import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
-import { populateAccounts, changeConnection } from "./services/extensionService";
+import { populateAccounts } from "./services/extensionService";
 import { createByteArrayFromFile, createFileFromByteArray, decoder } from "./services/fileService";
-import { addFileToFileList, resetFileList, updateStatusUI } from "./services/interfaceService";
+import { addFileToFileList, resetFileList } from "./services/interfaceService";
 import imageLinks from "./data/images.json";
 
 // necessary variables for connecting to the node via polkadotjs
