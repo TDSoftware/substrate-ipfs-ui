@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@polkadot/extension-dapp": "^0.44.8",
+    "jpeg-js": "^0.4.4",
     "magic-bytes.js": "^1.0.13"
   }
 }
