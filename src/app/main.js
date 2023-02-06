@@ -39,7 +39,7 @@ async function main() {
 // indexing functions
 async function indexChain(from, to) {
     const startHash = await api.rpc.chain.getBlockHash(from);
-    readBlock(startHash.toString(), from, to);
+    await readBlock(startHash.toString(), from, to);
     document.querySelector(".file-list-title").innerText =
         "ADDED FILES (Indexing...)";
 }
@@ -51,7 +51,7 @@ async function readBlock(blockHash, from, to) {
 
     // if the address matches the selected one, add the cid to the file list
     blockEvents.forEach((record) => {
-        const { event, phase } = record;
+        const { event } = record;
         if (event.section === "ipfs" && event.method === "AddedCid") {
             let uploaderAddress = event.data[0];
             let cid = new TextDecoder().decode(event.data[1]);
