@@ -16,6 +16,12 @@ cargo run -- --dev --state-pruning=archive
 ```
 git clone git@github.com:TDSoftware/substrate-ipfs-ui.git
 ```
-4. Run npm install and npm run dev so start the frontend application
+4. To start this Web-Client, run the following commands:
+```
+npm install 
+```
+npm run start
+```
+
 
 
