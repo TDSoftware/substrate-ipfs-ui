@@ -1,8 +1,8 @@
-# Overview
+# Overview [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This project is a web client for the substrate-ipfs node that allows users to interact with an integrated IPFS node. The web client allows users to upload files to IPFS and retrieve files from IPFS by providing the CID of the file. It uses [parcel](https://parceljs.org/) as a bundler and the [polkadot.js](https://polkadot.js.org/docs/) API for node interactivity.
 
-# Getting Started 
+## Getting Started 
 
 In order to run this web client, you will first need to have a [substrate-ipfs](https://github.com/TDSoftware/substrate-ipfs) node up and running, exposing the web sockets port 9944.
 This will allow the web client to interact with the node via polkadot.js. Refer to the [installation instructions](https://github.com/TDSoftware/substrate-ipfs/blob/master/README.md) of the substrate-ipfs node for more information.
@@ -15,7 +15,7 @@ To run the web client, the following steps have to be taken:
 
 The client will by default run on port 1234, so go to *localhost:1234*.
 
-# Functionalities
+## Functionalities
 
 This Web-Client has multiple functionalities for showcasing the capabilities of the substrate-ipfs node. These functionalitites include: 
 
