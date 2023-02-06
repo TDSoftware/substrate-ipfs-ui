@@ -1,9 +1,8 @@
-import { connectToExtension, getAccounts } from "./services/extensionService";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
-import { populateAccounts } from "./services/extensionService";
+import { populateAccounts, connectToExtension } from "./services/extensionService";
 import { createByteArrayFromFile, createFileFromByteArray, decoder } from "./services/fileService";
-import { addFileToFileList, resetFileList } from "./services/interfaceService";
+import { addFileToFileList, resetFileList, printResult } from "./services/interfaceService";
 import imageLinks from "./data/images.json";
 
 // necessary variables for connecting to the node via polkadotjs
@@ -99,7 +98,26 @@ async function createNodeConnection(address) {
     }
 }
 
-// transaction functions
+/*
+    Listener Stuff
+*/
+
+function addListeners() {
+    document.getElementById("uploadButton").addEventListener("click", uploadFile);
+    document
+        .getElementById("retrieveButton")
+        .addEventListener("click", retrieveFile);
+    document
+        .getElementById("address-select")
+        .addEventListener("change", selectAccount);
+    document
+        .getElementById("change-ws-address")
+        .addEventListener("click", changeConnection);
+    document
+        .querySelector(".toggle input[type='checkbox']")
+        .addEventListener("change", toggleVersion);
+}
+
 async function uploadFile() {
     var input = document.getElementById("myFile");
     var file = input.files[0];
@@ -174,49 +192,16 @@ async function retrieveFile() {
     }
 }
 
-function printResult(message, box, success) {
-    switch (box) {
-        case "upload":
-            resultBox = document.getElementById("uploadResultMessage");
-            break;
-        case "retrieve":
-            resultBox = document.getElementById("retrieveResultMessage");
-            break;
-    }
-
-    resultBox.innerHTML = message;
-    if (success == true) {
-        resultBox.classList.add("success");
-        resultBox.classList.remove("error");
-    } else {
-        resultBox.classList.add("error");
-        resultBox.classList.remove("success");
-    }
+function selectAccount() {
+    address = document.getElementById("address-select").value;
+    localStorage.setItem("address", address);
+    console.info("Address changed: " + address);
+    resetFileList();
 }
 
-/*
-    Listener Stuff
-*/
-
-export async function changeConnection() {
+async function changeConnection() {
     const wsAddress = document.getElementById("ws-address").value;
     await createNodeConnection(wsAddress);
-}
-
-function addListeners() {
-    document.getElementById("uploadButton").addEventListener("click", uploadFile);
-    document
-        .getElementById("retrieveButton")
-        .addEventListener("click", retrieveFile);
-    document
-        .getElementById("address-select")
-        .addEventListener("change", selectAccount);
-    document
-        .getElementById("change-ws-address")
-        .addEventListener("click", changeConnection);
-    document
-        .querySelector(".toggle input[type='checkbox']")
-        .addEventListener("change", toggleVersion);
 }
 
 function toggleVersion() {
@@ -224,12 +209,6 @@ function toggleVersion() {
     console.info("CID version changed to: " + selectedCidVersion);
 }
 
-function selectAccount() {
-    address = document.getElementById("address-select").value;
-    localStorage.setItem("address", address);
-    console.info("Address changed: " + address);
-    resetFileList();
-}
 
 function persistAddress() {
     let storedAddress = localStorage.getItem("address");

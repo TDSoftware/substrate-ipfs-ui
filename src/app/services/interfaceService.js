@@ -25,4 +25,24 @@ export function resetFileList() {
         fileList.removeChild(fileItem);
     });
 }
+
+export function printResult(message, box, success) {
+    switch (box) {
+        case "upload":
+            resultBox = document.getElementById("uploadResultMessage");
+            break;
+        case "retrieve":
+            resultBox = document.getElementById("retrieveResultMessage");
+            break;
+    }
+
+    resultBox.innerHTML = message;
+    if (success == true) {
+        resultBox.classList.add("success");
+        resultBox.classList.remove("error");
+    } else {
+        resultBox.classList.add("error");
+        resultBox.classList.remove("success");
+    }
+}
   
