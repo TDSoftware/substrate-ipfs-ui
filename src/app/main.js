@@ -19,16 +19,16 @@ const defaultWsAddress = "ws://127.0.0.1:9944";
 document.querySelector(".toggle input[type='checkbox']").checked = false;
 
 async function main() {
-    await createNodeConnection(defaultWsAddress, api);
+    await createNodeConnection(defaultWsAddress);
     await listenToBlocks();
-    addListeners();
 
-    // connect polkadot js extension
+    // wait for it to load and connect polkadot js extension
     await new Promise((resolve) => setTimeout(resolve, 300));
     await connectToExtension();
     await populateAccounts();
 
     persistAddress();
+    addListeners();
     console.info("App started.");
 
     // indexing experiment
@@ -194,11 +194,10 @@ function printResult(message, box, success) {
     }
 }
 
-/*
-    Listener Stuff
-*/
-
-export async function changeConnection() {
+async function changeConnection() {
+    if(api.isConnected) {
+        api.disconnect();
+    }
     const wsAddress = document.getElementById("ws-address").value;
     await createNodeConnection(wsAddress);
 }
