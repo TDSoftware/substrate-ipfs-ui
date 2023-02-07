@@ -7,7 +7,7 @@ export async function connectToExtension() {
     }
 }
 
-export async function getAccounts() {
+async function getAccounts() {
     const accounts = await web3Accounts()
 
     if (accounts.length === 0) {

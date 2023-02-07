@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx parcel public/index.html",
-    "benchmark": "node src/app/benchmark.js"
+    "start": "npx parcel public/index.html"
   },
   "author": "",
   "license": "ISC",
