@@ -1,33 +1,15 @@
 const crypto = require('crypto');
-const fs = require('fs');
-const path = require("path");
 const jpeg = require('jpeg-js');
 
 const { ApiPromise, WsProvider } = require("@polkadot/api");
 const { Keyring } = require('@polkadot/keyring');
 const { prompt } = require('enquirer');
 
-
-const directory = 'src/tmp';
-
-/*  
-    This process is meant for benchmarking on a development node.
-
-    1. Ask for node address
-    2. Create Node Connection
-    3. Create Dummy Account and get fees
-    4. Ask for the amount of files to create
-    5. Ask for the size of the files to create
-    6. Create Dummy Files
-    7. Upload Dummy Files
-    8. Check RAM/ disk usage
-    9. Delete Dummy Files
-    10. Delete Dummy Account
-*/
-console.warn = () => { };
-
-// 2MB in kilobyte = 2048
+// set this to the corresponding max block size
 const blockSize = 2048;
+
+// disable polkadot js warnings
+console.warn = () => { };
 
 const cli = async () => {
     const addressPrompt = await prompt({
@@ -59,10 +41,9 @@ const cli = async () => {
         name: 'fileSize',
         limit: blockSize / fileAmountPrompt.fileAmount,
         default: 20,
-        message: 'Enter the size of the files you want to create in KB. The limit is: ' + Math.round(2000 / fileAmountPrompt.fileAmount),
+        message: 'Enter the size of the files you want to create in KB. The limit is ' + Math.round(2000 / fileAmountPrompt.fileAmount) + ' KB.',
     })
 
-    // ask for cid version, the options are 0 and 1 so use a select
     const cidVersionPrompt = await prompt({
         type: 'select',
         name: 'cidVersion',
@@ -74,13 +55,13 @@ const cli = async () => {
     })
 
     let cidVersion = cidVersionPrompt.cidVersion === 'CIDv0' ? 0 : 1;
-    
+
     if (fileSizePrompt.fileSize > blockSize / fileAmountPrompt.fileAmount) {
         console.log("File size is too big. Please try again.");
         return;
     }
 
-    console.log(`Creating ${fileAmountPrompt.fileAmount} accounts and funding them...`);
+    console.log(`Creating ${fileAmountPrompt.fileAmount} test accounts and funding them... This can take a moment...`);
     const files = await createDummyFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
 
     // this is needed because we need a unique nonce per transaction
@@ -93,7 +74,7 @@ const cli = async () => {
         await new Promise(r => setTimeout(r, 4000));
     }
 
-    console.log("Uploading files...")
+    console.log(`Uploading ${files.length} files...`)
 
     for (const file in files) {
         try {
@@ -101,11 +82,10 @@ const cli = async () => {
             console.time(`Returned file for ${fileAccountMapping[files[file]].address} in: `)
             await ipfsAddBytes(cidVersion, fileAccountMapping[files[file]], files[file], api);
             console.timeEnd(`Extrinsic for File ${file} submitted in: `)
-        } catch(error) {
+        } catch (error) {
             console.log(error);
         }
     }
-    console.log("All Files have been added.")
 
     await api.query.system.events((events) => {
         events.forEach((record) => {
@@ -115,6 +95,7 @@ const cli = async () => {
                 for (const file in fileAccountMapping) {
                     if (eventData[0].toString() === fileAccountMapping[file].address) {
                         // file for account has been added in
+                        console.log(eventData[1].toHuman())
                         console.timeEnd(`Returned file for ${fileAccountMapping[file].address} in: `)
                     }
                 }
@@ -151,7 +132,6 @@ async function giveDummyAccountFunds(account, api) {
 }
 
 async function createDummyFile(fileSizeInKb) {
-    await clearTmpFolder();
     const data = crypto.randomBytes(fileSizeInKb * 1024);
     for (let i = 0; i < data.length; i++) {
         data[i] = Math.floor(Math.random() * 256);
@@ -160,18 +140,15 @@ async function createDummyFile(fileSizeInKb) {
     let quality = 100;
     let jpegData = null;
 
-    while (jpegData === null || Buffer.byteLength(jpegData) > fileSizeInKb * 1024) {
-        const width = Math.ceil(Math.sqrt(fileSizeInKb * 1024));
-        const height = Math.ceil(fileSizeInKb * 1024 / width);
+    const width = Math.ceil(Math.sqrt(fileSizeInKb * 1024));
+    const height = Math.ceil(fileSizeInKb * 1024 / width);
 
-        jpegData = jpeg.encode({
-            data: data,
-            width: width,
-            height: height
-        }, quality).data;
+    jpegData = jpeg.encode({
+        data: data,
+        width: width,
+        height: height
+    }, quality).data;
 
-        quality -= 10;
-    }
     return jpegData;
 }
 
@@ -181,18 +158,6 @@ async function createDummyFileArray(amount, size) {
         files.push(await createDummyFile(size));
     }
     return files;
-}
-
-async function clearTmpFolder() {
-    fs.readdir(directory, (err, files) => {
-        if (err) throw err;
-
-        for (const file of files) {
-            fs.unlink(path.join(directory, file), (err) => {
-                if (err) throw err;
-            });
-        }
-    });
 }
 
 cli();
