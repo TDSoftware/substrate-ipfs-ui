@@ -5,7 +5,7 @@ This project is a web client for the substrate-ipfs node that allows users to in
 ## Getting Started 
 
 In order to run this web client, you will first need to have a [substrate-ipfs](https://github.com/TDSoftware/substrate-ipfs) node up and running, exposing the web sockets port 9944.
-This will allow the web client to interact with the node via polkadot.js. Refer to the [installation instructions](https://github.com/TDSoftware/substrate-ipfs/blob/master/README.md) of the substrate-ipfs node for more information.
+This will allow the web client to interact with the node via polkadot.js. Refer to the [installation instructions](https://github.com/TDSoftware/substrate-ipfs/blob/master/README.md) of the substrate-ipfs node for more information. If you want to use the full scope of this web client, you need to run the substrate-ipfs node as an archive node, by adding ** --state.pruning=archive ** to the command you use to start the node. This is necessary if you want to use the indexing section of the web client.
 
 To run the web client, the following steps have to be taken: 
 
