@@ -19,8 +19,9 @@ The client will by default run on port 1234, so go to the URl *localhost:1234* t
 
 This Web-Client has multiple functionalities for showcasing the capabilities of the substrate-ipfs node. These functionalitites include: 
 
-- Uploading a file to the integrated IPFS node via the ipfs(addBytes) extrinsic
-- Retrieving a file from the integrated IPFS node via the ipfs(catBytes) extrinsic
+- Uploading a file to the integrated IPFS node via the ipfs(AddBytes) extrinsic
+- Retrieving a file from the integrated IPFS node via the ipfs(CatBytes) extrinsic
+- listening to the events emitted by the ocw callback to retrieve the cid/ the data from the extrinsics
 - Converting files to byte arrays and byte arrays to file (by using magic bytes -> some file extensions will not be recongized)
 - Signing the previously mentioned transactions via the polkadot.js browser extensions
 - Indexing the connected blockchains for files uploaded by the selected account (without storage)
