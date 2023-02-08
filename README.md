@@ -13,7 +13,7 @@ To run the web client, the following steps have to be taken:
 2. Run the command **npm install** in the project directory to install necessary dependencies
 3. Run the command **npm run start** in the project directory to start the web client.
 
-The client will by default run on port 1234, so go to *localhost:1234*.
+The client will by default run on port 1234, so go to the URl *localhost:1234* to access the web client.
 
 ## Functionalities
 
@@ -21,7 +21,14 @@ This Web-Client has multiple functionalities for showcasing the capabilities of 
 
 - Uploading a file to the integrated IPFS node via the ipfs(addBytes) extrinsic
 - Retrieving a file from the integrated IPFS node via the ipfs(catBytes) extrinsic
+- Converting files to byte arrays and byte arrays to file (by using magic bytes -> some file extensions will not be recongized)
 - Signing the previously mentioned transactions via the polkadot.js browser extensions
-- Indexing the connected blockchains for files uploaded by the selected account
+- Indexing the connected blockchains for files uploaded by the selected account (without storage)
 - Switching the connection between different nodes
+
+## Benchmarking
+
+In addition to the web client, this project contains a CLI simulation tool that can be used for benchmarking. The CLI will guide you through multiple steps where you definer your benchmarking needs and will then create a specified amount of dummy files of a specific size that will be uploaded to the substrate-ipfs node via the ipfs(AddBytes) extrinsic. This can be used for benchmarking and stress testing a substrate-ipfs node and the underlying rust-ipfs implementation.
+
+To run the benchmarking, run the command **npm run benchmark**.
 
