@@ -5,13 +5,14 @@ This project is a web client for the substrate-ipfs node that allows users to in
 ## Getting Started 
 
 In order to run this web client, you will first need to have a [substrate-ipfs](https://github.com/TDSoftware/substrate-ipfs) node up and running, exposing the web sockets port 9944.
-This will allow the web client to interact with the node via polkadot.js. Refer to the [installation instructions](https://github.com/TDSoftware/substrate-ipfs/blob/master/README.md) of the substrate-ipfs node for more information. If you want to use the full scope of this web client, you need to run the substrate-ipfs node as an archive node, by adding **--state.pruning=archive** to the command you use to start the node. This is necessary if you want to use the indexing section of the web client.
+This will allow the web client to interact with the node via polkadot.js. Refer to the [installation instructions](https://github.com/TDSoftware/substrate-ipfs/blob/master/README.md) of the substrate-ipfs node for more information. If you want to use the full scope of this web client, you will need to run the substrate-ipfs node as an archive node, by adding **--state.pruning=archive** to the command you use to start the node. This is necessary if you want to use the indexing section of the web client because full node does not have access to historical data.
 
 To run the web client, the following steps have to be taken: 
 
-1. Ensure [npm](https://www.npmjs.com/) is installed on your machine.
-2. Run the command **npm install** in the project directory to install necessary dependencies
-3. Run the command **npm run start** in the project directory to start the web client.
+1. Download the [polkadot.js browser extension](https://polkadot.js.org/extension/) and create an account. This is necessary to sign transactions.
+2. Ensure [npm](https://www.npmjs.com/) is installed on your machine.
+3. Run the command **npm install** in the project directory to install necessary dependencies
+4. Run the command **npm run start** in the project directory to start the web client.
 
 The client will by default run on port 1234, so go to the URl *localhost:1234* to access the web client.
 
@@ -21,8 +22,8 @@ This Web-Client has multiple functionalities for showcasing the capabilities of 
 
 - Uploading a file to the integrated IPFS node via the ipfs(AddBytes) extrinsic
 - Retrieving a file from the integrated IPFS node via the ipfs(CatBytes) extrinsic
-- listening to the events emitted by the ocw callback to retrieve the cid/ the data from the extrinsics
-- Converting files to byte arrays and byte arrays to file (by using magic bytes -> some file extensions will not be recongized)
+- listening to the events emitted by the ocw callback to retrieve the cid/ data from the extrinsics
+- Converting files to byte arrays and byte arrays to file (by using magic bytes -> thus some file extensions may not be recognized)
 - Signing the previously mentioned transactions via the polkadot.js browser extensions
 - Indexing the connected blockchains for files uploaded by the selected account (without storage)
 - Switching the connection between different nodes
