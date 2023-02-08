@@ -36,7 +36,7 @@ async function main() {
     await indexChain(block.block.header.number, 1);
 }
 
-// indexing functions
+// goes through all blocks from blocknumber "from" to blocknumber "to"
 async function indexChain(from, to) {
     const startHash = await api.rpc.chain.getBlockHash(from);
     await readBlock(startHash.toString(), from, to);
@@ -44,6 +44,7 @@ async function indexChain(from, to) {
         "ADDED FILES (Indexing...)";
 }
 
+// reads the data of a block, gets the events, checks if the AddedCid event is emitted and adds the cid to the file list
 async function readBlock(blockHash, from, to) {
     let block = await api.rpc.chain.getBlock(blockHash);
     const apiAt = await api.at(blockHash);
@@ -71,14 +72,14 @@ async function readBlock(blockHash, from, to) {
     }
 }
 
-// function that listens to new blocks and logs them to the console
+// function that listens to new blocks displays the block number in the UI
 async function listenToBlocks() {
     await api.rpc.chain.subscribeFinalizedHeads(async (header) => {
         document.getElementById("block-number").innerHTML = header.number;
     });
 }
 
-// extension functions
+// creats an api connection to a node given a wsProvider address
 async function createNodeConnection(address) {
     try {
         wsProvider = new WsProvider(address);
@@ -98,10 +99,7 @@ async function createNodeConnection(address) {
     }
 }
 
-/*
-    Listener Stuff
-*/
-
+// adds multiple listeners to the UI
 function addListeners() {
     document.getElementById("uploadButton").addEventListener("click", uploadFile);
     document
@@ -118,6 +116,7 @@ function addListeners() {
         .addEventListener("change", toggleVersion);
 }
 
+// functionality for the file upload
 async function uploadFile() {
     var input = document.getElementById("myFile");
     var file = input.files[0];
@@ -151,6 +150,7 @@ async function uploadFile() {
     }
 }
 
+// functionality for the file retrieval
 async function retrieveFile() {
     try {
         const SENDER = document.getElementById("address-select").value;
@@ -192,6 +192,7 @@ async function retrieveFile() {
     }
 }
 
+// is triggered when selecting an account from the dropdown and stores the selected address in the local storage
 function selectAccount() {
     address = document.getElementById("address-select").value;
     localStorage.setItem("address", address);
@@ -199,17 +200,18 @@ function selectAccount() {
     resetFileList();
 }
 
+// is triggered when changing the ws address and the change button is pressed -> creates a new api connection
 async function changeConnection() {
     const wsAddress = document.getElementById("ws-address").value;
     await createNodeConnection(wsAddress);
 }
 
+// is triggered when the toggle button is pressed -> changes the cid version
 function toggleVersion() {
     selectedCidVersion = this.checked ? 1 : 0;
-    console.info("CID version changed to: " + selectedCidVersion);
 }
 
-
+// is used to persist the selected user address in the local storage on refresh
 function persistAddress() {
     let storedAddress = localStorage.getItem("address");
     const select = document.getElementById("address-select");
