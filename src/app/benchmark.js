@@ -25,7 +25,7 @@ const cli = async () => {
         console.warn(error);
     }
 
-    const blockSize = parseFloat(await api.consts.system.blockLength.toHuman().max.normal.replace(/,/g, '')) / 1024;
+    const blockSize = parseInt(await api.consts.system.blockLength.toHuman().max.normal.replace(/,/g, '')) / 1024;
 
     const fileAmountPrompt = await prompt({
         type: 'input',
@@ -93,8 +93,6 @@ const cli = async () => {
                 let eventData = event.data;
                 for (const file in fileAccountMapping) {
                     if (eventData[0].toString() === fileAccountMapping[file].address) {
-                        // file for account has been added in
-                        console.log(eventData[1].toHuman())
                         console.timeEnd(`Returned file for ${fileAccountMapping[file].address} in: `)
                     }
                 }
