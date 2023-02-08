@@ -1,3 +1,4 @@
+// add a file entry to the list of indexed files
 export function addFileToFileList(cid, block) {
     let fileList = document.querySelector(".file-list");
     let newFileItem = document.createElement("div");
@@ -17,6 +18,7 @@ export function addFileToFileList(cid, block) {
     fileList.appendChild(newFileItem);
 }
 
+// clear the file list of indexed files
 export function resetFileList() {
     let fileList = document.querySelector(".file-list");
     let fileItems = document.querySelectorAll(".file-item");
@@ -26,6 +28,7 @@ export function resetFileList() {
     });
 }
 
+// print results to the result boxes in the UI
 export function printResult(message, box, success) {
     switch (box) {
         case "upload":

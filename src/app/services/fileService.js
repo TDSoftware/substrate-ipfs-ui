@@ -1,6 +1,7 @@
 import { filetypemime } from "magic-bytes.js";
 import mimeDefinitions from '../data/mime.json';
 
+// creates a byte array given a file using the FileReader API
 export async function createByteArrayFromFile(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -15,6 +16,7 @@ export async function createByteArrayFromFile(file) {
     });
 }
 
+// creates a file from a byte array. Uses the magic numbers to determine the MIME type and the mime.json file to determine the file extension.
 export function createFileFromByteArray(filename, byteArray) {
     const mimeType = getByteArrayMimeType(byteArray);
     const blob = new Blob([byteArray], { type: mimeType });
@@ -46,6 +48,7 @@ function getByteArrayMimeType(byteArray) {
     return filetypemime(byteArray)[0];
 }
 
+// a basic decoder for bytes
 export function decoder(bytes) {
     return new TextDecoder().decode(bytes);
 }

@@ -1,12 +1,14 @@
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
 
+// creates a connection to the polkadot js extension
 export async function connectToExtension() {
-    const extensions = await web3Enable("Subfile")
+    const extensions = await web3Enable("substrate-ipfs")
     if (extensions.length === 0) {
         console.warn('No extension found.')
     }
 }
 
+// gets all accounts from the polkadot js extension
 async function getAccounts() {
     const accounts = await web3Accounts()
 
@@ -16,6 +18,7 @@ async function getAccounts() {
     return accounts;
 }
 
+// lists all accounts in the select element
 export async function populateAccounts() {
     const optionsList = await getAccounts();
     const selectElement = document.querySelector("#address-select");
