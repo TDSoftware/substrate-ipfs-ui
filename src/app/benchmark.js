@@ -5,9 +5,6 @@ const { ApiPromise, WsProvider } = require("@polkadot/api");
 const { Keyring } = require('@polkadot/keyring');
 const { prompt } = require('enquirer');
 
-// set this to the corresponding max block size
-const blockSize = 2048;
-
 // disable polkadot js warnings
 console.warn = () => { };
 
@@ -28,6 +25,8 @@ const cli = async () => {
         console.warn(error);
     }
 
+    const blockSize = parseFloat(await api.consts.system.blockLength.toHuman().max.normal.replace(/,/g, '')) / 1024;
+
     const fileAmountPrompt = await prompt({
         type: 'input',
         name: 'fileAmount',
@@ -41,7 +40,7 @@ const cli = async () => {
         name: 'fileSize',
         limit: blockSize / fileAmountPrompt.fileAmount,
         default: 20,
-        message: 'Enter the size of the files you want to create in KB. The limit is ' + Math.round(2000 / fileAmountPrompt.fileAmount) + ' KB.',
+        message: 'Enter the size of the files you want to create in KB. The limit is ' + Math.round(blockSize / fileAmountPrompt.fileAmount) + ' KB.',
     })
 
     const cidVersionPrompt = await prompt({
