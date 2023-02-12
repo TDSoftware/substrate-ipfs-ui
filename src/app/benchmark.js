@@ -55,7 +55,7 @@ const cli = async () => {
 
     let cidVersion = cidVersionPrompt.cidVersion === 'CIDv0' ? 0 : 1;
 
-    if (fileSizePrompt.fileSize > blockSize / fileAmountPrompt.fileAmount) {
+    if (fileSizePrompt.fileSize > blockSize) {
         console.log("File size is too big. Please try again.");
         return;
     }
@@ -111,7 +111,8 @@ async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
   }
 
 async function ipfsAddBytes(cidVersion, account, file, api) {
-    const hexByteArray = file.toString('hex');
+    // has to be converted because polkadot js has a low limit for Uint8Array
+    const hexByteArray = Array.prototype.map.call(new Uint8Array(file), x => ('00' + x.toString(16)).slice(-2));
     const SENDER = account
     let transaction = await api.tx.ipfs.addBytes(hexByteArray, cidVersion)
     await transaction.signAndSend(SENDER)
