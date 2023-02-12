@@ -66,17 +66,16 @@ const cli = async () => {
         return;
     }
 
+    let files = [];
     console.log(`Creating ${fileAmountPrompt.fileAmount} test accounts and funding them... This can take a moment...`);
     switch (randomizeFileSize.randomizeFileSize) {
         case true:
-          await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+          files = await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
           break;
         case false:
-          await createRandomFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+          files = await createDummyFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
           break;
-      }
-
-    const files = await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+    }
 
     // this is needed because we need a unique nonce per transaction
     let fileAccountMapping = {};
