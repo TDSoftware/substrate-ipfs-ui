@@ -75,16 +75,12 @@ const cli = async () => {
 
     console.log(`Uploading ${files.length} files...`)
 
+    const iterationTasks = [];
     for (const file in files) {
-        try {
-            console.time(`Extrinsic for File ${file} submitted in: `)
-            console.time(`Returned file for ${fileAccountMapping[files[file]].address} in: `)
-            await ipfsAddBytes(cidVersion, fileAccountMapping[files[file]], files[file], api);
-            console.timeEnd(`Extrinsic for File ${file} submitted in: `)
-        } catch (error) {
-            console.log(error);
-        }
+        iterationTasks.push(addBytesToIpfs(cidVersion, fileAccountMapping[files[file]], files[file], file, api));
     }
+
+    await Promise.all(iterationTasks);
 
     await api.query.system.events((events) => {
         events.forEach((record) => {
@@ -93,6 +89,7 @@ const cli = async () => {
                 let eventData = event.data;
                 for (const file in fileAccountMapping) {
                     if (eventData[0].toString() === fileAccountMapping[file].address) {
+                        console.log(`File size: ${file.length / 1024} KB`);
                         console.timeEnd(`Returned file for ${fileAccountMapping[file].address} in: `)
                     }
                 }
@@ -102,6 +99,17 @@ const cli = async () => {
     return;
 }
 
+async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
+    try {
+      console.time(`Extrinsic for File ${index} submitted in: `);
+      console.time(`Returned file for ${fileAccount.address} in: `);
+      await ipfsAddBytes(cidVersion, fileAccount, file, api);
+      console.timeEnd(`Extrinsic for File ${index} submitted in: `);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
 async function ipfsAddBytes(cidVersion, account, file, api) {
     const hexByteArray = file.toString('hex');
     const SENDER = account
@@ -110,9 +118,8 @@ async function ipfsAddBytes(cidVersion, account, file, api) {
 }
 
 async function connectToNode(address) {
-    let api = await ApiPromise.create({
-        provider: new WsProvider(address)
-    });
+    let wsProvider = new WsProvider(address);
+    let api = await ApiPromise.create({ provider: wsProvider });
     return api;
 }
 
