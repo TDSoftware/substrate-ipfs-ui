@@ -43,6 +43,12 @@ const cli = async () => {
         message: 'Enter the size of the files you want to create in KB. The limit is ' + Math.round(blockSize / fileAmountPrompt.fileAmount) + ' KB.',
     })
 
+    const randomizeFileSize = await prompt({
+        type: 'confirm',
+        name: 'randomizeFileSize',
+        message: 'Do you want to randomize the file size? If yes, the file size will be between ' + fileSizePrompt.fileSize  + 'KB and ' + Math.round(fileSizePrompt.fileSize / 10) + ' KB.',
+    })
+
     const cidVersionPrompt = await prompt({
         type: 'select',
         name: 'cidVersion',
@@ -61,7 +67,16 @@ const cli = async () => {
     }
 
     console.log(`Creating ${fileAmountPrompt.fileAmount} test accounts and funding them... This can take a moment...`);
-    const files = await createDummyFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+    switch (randomizeFileSize.randomizeFileSize) {
+        case true:
+          await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+          break;
+        case false:
+          await createRandomFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+          break;
+      }
+
+    const files = await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
 
     // this is needed because we need a unique nonce per transaction
     let fileAccountMapping = {};
@@ -102,6 +117,7 @@ const cli = async () => {
 async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
     try {
       console.time(`Extrinsic for File ${index} submitted in: `);
+    console.log(`File ${index} size: ${file.length / 1024} KB`);
       console.time(`Returned file for ${fileAccount.address} in: `);
       await ipfsAddBytes(cidVersion, fileAccount, file, api);
       console.timeEnd(`Extrinsic for File ${index} submitted in: `);
@@ -128,6 +144,16 @@ async function createDummyAccount(name) {
     const keyring = new Keyring({ type: 'sr25519' });
     const account = keyring.addFromUri(`//${name}`, { name: name }, 'sr25519');
     return account;
+}
+
+async function createRandomFileArrayOfRandomSize(amount, size) {
+    const files = [];
+    for (let i = 0; i < amount; i++) {
+        const randomSize = Math.floor(Math.random() * size) + 1;
+        const randomFile = await createDummyFile(randomSize);
+        files.push(randomFile);
+    }
+    return files;
 }
 
 async function giveDummyAccountFunds(account, api) {
