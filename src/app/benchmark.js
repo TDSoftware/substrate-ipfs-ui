@@ -17,7 +17,6 @@ const cli = async () => {
     })
 
     let api;
-    let account;
 
     try {
         api = await connectToNode(addressPrompt.wsAddress);
@@ -46,7 +45,7 @@ const cli = async () => {
     const randomizeFileSize = await prompt({
         type: 'confirm',
         name: 'randomizeFileSize',
-        message: 'Do you want to randomize the file size? If yes, the file size will be between ' + fileSizePrompt.fileSize  + 'KB and ' + Math.round(fileSizePrompt.fileSize / 10) + ' KB.',
+        message: 'Do you want to randomize the file size? If yes, the file size will be between ' + fileSizePrompt.fileSize + 'KB and ' + Math.round(fileSizePrompt.fileSize / 10) + ' KB.',
     })
 
     const cidVersionPrompt = await prompt({
@@ -70,11 +69,11 @@ const cli = async () => {
     console.log(`Creating ${fileAmountPrompt.fileAmount} test accounts and funding them... This can take a moment...`);
     switch (randomizeFileSize.randomizeFileSize) {
         case true:
-          files = await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
-          break;
+            files = await createRandomFileArrayOfRandomSize(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+            break;
         case false:
-          files = await createDummyFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
-          break;
+            files = await createDummyFileArray(fileAmountPrompt.fileAmount, fileSizePrompt.fileSize);
+            break;
     }
 
     // this is needed because we need a unique nonce per transaction
@@ -82,12 +81,12 @@ const cli = async () => {
     for (const file in files) {
         const randomString = crypto.randomBytes(5).toString('hex');
         const dummyAccount = await createDummyAccount(randomString);
-        await giveDummyAccountFunds(dummyAccount, api);
         fileAccountMapping[files[file]] = dummyAccount;
-        await new Promise(r => setTimeout(r, 4000));
     }
 
-    console.log(`Uploading ${files.length} files...`)
+    await batchFunding(api, Object.values(fileAccountMapping));
+
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     const iterationTasks = [];
     for (const file in files) {
@@ -95,6 +94,8 @@ const cli = async () => {
     }
 
     await Promise.all(iterationTasks);
+
+    console.log(`Uploading ${files.length} files...`)
 
     await api.query.system.events((events) => {
         events.forEach((record) => {
@@ -113,17 +114,30 @@ const cli = async () => {
     return;
 }
 
+async function batchFunding(api, accounts) {
+    const txs = accounts.map(account => api.tx.balances.transfer(account.address, 922337203164855807n));
+    const keyring = new Keyring({ type: 'sr25519' });
+    const alice = keyring.addFromUri('//Alice', { name: 'Alice' });
+    let accountsCount = accounts.length;
+
+    await api.tx.utility.batch(txs).signAndSend(alice, ({ status }) => {
+        if (status.isInBlock) {
+            console.log("Funded " + accountsCount + " accounts successfully.");
+        }
+    });
+}
+
 async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
     try {
-      console.time(`Extrinsic for File ${index} submitted in: `);
-    console.log(`File ${index} size: ${file.length / 1024} KB`);
-      console.time(`Returned file for ${fileAccount.address} in: `);
-      await ipfsAddBytes(cidVersion, fileAccount, file, api);
-      console.timeEnd(`Extrinsic for File ${index} submitted in: `);
+        console.time(`Extrinsic for File ${index} submitted in: `);
+        console.log(`File ${index} size: ${file.length / 1024} KB`);
+        console.time(`Returned file for ${fileAccount.address} in: `);
+        await ipfsAddBytes(cidVersion, fileAccount, file, api);
+        console.timeEnd(`Extrinsic for File ${index} submitted in: `);
     } catch (error) {
-      console.log(error);
+        console.log(error);
     }
-  }
+}
 
 async function ipfsAddBytes(cidVersion, account, file, api) {
     // has to be converted because polkadot js has a low limit for Uint8Array
@@ -153,12 +167,6 @@ async function createRandomFileArrayOfRandomSize(amount, size) {
         files.push(randomFile);
     }
     return files;
-}
-
-async function giveDummyAccountFunds(account, api) {
-    const keyring = new Keyring({ type: 'sr25519' });
-    const alice = keyring.addFromUri('//Alice', { name: 'Alice' });
-    api.tx.balances.transfer(account.address, 922337203164855807n).signAndSend(alice);
 }
 
 async function createDummyFile(fileSizeInKb) {
