@@ -76,7 +76,6 @@ const cli = async () => {
             break;
     }
 
-    // this is needed because we need a unique nonce per transaction
     let fileAccountMapping = {};
     for (const file in files) {
         const randomString = crypto.randomBytes(5).toString('hex');
@@ -86,6 +85,7 @@ const cli = async () => {
 
     await batchFunding(api, Object.values(fileAccountMapping));
 
+    // let a new block settle in
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     const iterationTasks = [];
@@ -97,6 +97,7 @@ const cli = async () => {
 
     console.log(`Uploading ${files.length} files...`)
 
+    let counter = 0;
     await api.query.system.events((events) => {
         events.forEach((record) => {
             const { event } = record;
@@ -106,23 +107,27 @@ const cli = async () => {
                     if (eventData[0].toString() === fileAccountMapping[file].address) {
                         console.log(`File size: ${file.length / 1024} KB`);
                         console.timeEnd(`Returned file for ${fileAccountMapping[file].address} in: `)
+                        counter++;
+                        if (counter === files.length) {
+                            console.log("Found all files. Returning funds to the system account...");
+                            returnFundsToSystemAccount(api, Object.values(fileAccountMapping));
+                            return;
+                        }
                     }
                 }
             }
         });
-    });
-    return;
+    })
 }
 
 async function batchFunding(api, accounts) {
     const txs = accounts.map(account => api.tx.balances.transfer(account.address, 922337203164855807n));
     const keyring = new Keyring({ type: 'sr25519' });
     const alice = keyring.addFromUri('//Alice', { name: 'Alice' });
-    let accountsCount = accounts.length;
 
     await api.tx.utility.batch(txs).signAndSend(alice, ({ status }) => {
         if (status.isInBlock) {
-            console.log("Funded " + accountsCount + " accounts successfully.");
+            console.log("Funded " + accounts.length + " accounts successfully.");
         }
     });
 }
@@ -130,7 +135,6 @@ async function batchFunding(api, accounts) {
 async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
     try {
         console.time(`Extrinsic for File ${index} submitted in: `);
-        console.log(`File ${index} size: ${file.length / 1024} KB`);
         console.time(`Returned file for ${fileAccount.address} in: `);
         await ipfsAddBytes(cidVersion, fileAccount, file, api);
         console.timeEnd(`Extrinsic for File ${index} submitted in: `);
@@ -139,12 +143,21 @@ async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
     }
 }
 
+async function returnFundsToSystemAccount(api, accounts) {
+    const keyring = new Keyring({ type: 'sr25519' });
+    const alice = keyring.addFromUri('//Alice', { name: 'Alice' });
+    accounts.forEach(async (account) => {
+        const balance = (await api.query.system.account(account.address)).toHuman().data.free;
+        await api.tx.balances.transfer(alice.address, BigInt(balance.replace(/,/g, '') * 0.9)).signAndSend(account);
+    });
+}
+
 async function ipfsAddBytes(cidVersion, account, file, api) {
     // has to be converted because polkadot js has a low limit for Uint8Array
     const hexByteArray = Array.prototype.map.call(new Uint8Array(file), x => ('00' + x.toString(16)).slice(-2));
     const SENDER = account
     let transaction = await api.tx.ipfs.addBytes(hexByteArray, cidVersion)
-    await transaction.signAndSend(SENDER)
+    return await transaction.signAndSend(SENDER)
 }
 
 async function connectToNode(address) {
