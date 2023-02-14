@@ -124,7 +124,7 @@ const cli = async () => {
                                 delete results[entry].submitEnd;
                             }
                             createCsvFile(results);
-                            return;
+                            return process.exit(1);
                         }
                     }
                 }
