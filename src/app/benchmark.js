@@ -1,5 +1,7 @@
 const crypto = require('crypto');
 const jpeg = require('jpeg-js');
+const fs = require('fs');
+const jsonExport = require('jsonexport');
 
 const { ApiPromise, WsProvider } = require("@polkadot/api");
 const { Keyring } = require('@polkadot/keyring');
@@ -7,6 +9,8 @@ const { prompt } = require('enquirer');
 
 // disable polkadot js warnings
 console.warn = () => { };
+
+const results = [];
 
 const cli = async () => {
     const addressPrompt = await prompt({
@@ -90,7 +94,7 @@ const cli = async () => {
 
     const iterationTasks = [];
     for (const file in files) {
-        iterationTasks.push(addBytesToIpfs(cidVersion, fileAccountMapping[files[file]], files[file], file, api));
+        iterationTasks.push(addBytesToIpfs(cidVersion, fileAccountMapping[files[file]], files[file], api));
     }
 
     await Promise.all(iterationTasks);
@@ -105,12 +109,21 @@ const cli = async () => {
                 let eventData = event.data;
                 for (const file in fileAccountMapping) {
                     if (eventData[0].toString() === fileAccountMapping[file].address) {
-                        console.log(`File size: ${file.length / 1024} KB`);
-                        console.timeEnd(`Returned file for ${fileAccountMapping[file].address} in: `)
+                        for (const entry in results) {
+                            if (results[entry].account === fileAccountMapping[file].address) {
+                                results[entry]['return'] = performance.now() - results[entry].submitStart;
+                            }
+                        }
                         counter++;
                         if (counter === files.length) {
-                            console.log("Found all files. Returning funds to the system account...");
+                            console.log("All CIDs have been returned. Returning funds to the system account...");
                             returnFundsToSystemAccount(api, Object.values(fileAccountMapping));
+                            analyzeResults(results);
+                            for (const entry in results) {
+                                delete results[entry].submitStart;
+                                delete results[entry].submitEnd;
+                            }
+                            createCsvFile(results);
                             return;
                         }
                     }
@@ -118,6 +131,24 @@ const cli = async () => {
             }
         });
     })
+}
+
+async function addBytesToIpfs(cidVersion, fileAccount, file, api) {
+    try {
+        let rowEntry = {};
+        let submitStart = performance.now();
+        console.time(`Returned file for ${fileAccount.address} in: `);
+        await ipfsAddBytes(cidVersion, fileAccount, file, api);
+        let submitEnd = performance.now()
+        rowEntry['fileSize'] = file.length / 1024;
+        rowEntry['account'] = fileAccount.address;
+        rowEntry['submitStart'] = submitStart;
+        rowEntry['submitEnd'] = submitEnd;
+        rowEntry['submit'] = submitEnd - submitStart;
+        results.push(rowEntry);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 async function batchFunding(api, accounts) {
@@ -132,16 +163,46 @@ async function batchFunding(api, accounts) {
     });
 }
 
-async function addBytesToIpfs(cidVersion, fileAccount, file, index, api) {
-    try {
-        console.time(`Extrinsic for File ${index} submitted in: `);
-        console.time(`Returned file for ${fileAccount.address} in: `);
-        await ipfsAddBytes(cidVersion, fileAccount, file, api);
-        console.timeEnd(`Extrinsic for File ${index} submitted in: `);
-    } catch (error) {
-        console.log(error);
-    }
+const createCsvFile = (data) => {
+    jsonExport(data, function(err, csv){
+        if (err) return console.error(err);
+        const name = `benchmark-raw-${Date.now()}.csv`;
+
+        fs.writeFile(name, csv, (err) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log("CSV file has been created under the name " + name + "")
+        });
+    });
 }
+
+function analyzeResults(data) {
+    const dataJSON = JSON.parse(JSON.stringify(data));
+    const submit = dataJSON.map(entry => entry.submit);
+    const returnTime = dataJSON.map(entry => entry.return);
+    const fileSize = dataJSON.map(entry => entry.fileSize);
+    const averageSubmit = submit.reduce((a, b) => a + b, 0) / submit.length;
+    const averageReturn = returnTime.reduce((a, b) => a + b, 0) / returnTime.length;
+    const averageFileSize = fileSize.reduce((a, b) => a + b, 0) / fileSize.length;
+    const minSubmit = Math.min(...submit);
+    const minReturn = Math.min(...returnTime);
+    const minFileSize = Math.min(...fileSize);
+    const maxSubmit = Math.max(...submit);
+    const maxReturn = Math.max(...returnTime);
+    const maxFileSize = Math.max(...fileSize);
+    console.log(`\n\nResults:\n`);
+    console.log(`Average submit time: ${averageSubmit} ms`);
+    console.log(`Average return time: ${averageReturn} ms`);
+    console.log(`Average file size: ${averageFileSize} kB\n`);
+    console.log(`Minimum submit time: ${minSubmit} ms`);
+    console.log(`Minimum return time: ${minReturn} ms`);
+    console.log(`Minimum file size: ${minFileSize} kB\n`);
+    console.log(`Maximum submit time: ${maxSubmit} ms`);
+    console.log(`Maximum return time: ${maxReturn} ms`);
+    console.log(`Maximum file size: ${maxFileSize} kB\n`);
+}
+
 
 async function returnFundsToSystemAccount(api, accounts) {
     const keyring = new Keyring({ type: 'sr25519' });

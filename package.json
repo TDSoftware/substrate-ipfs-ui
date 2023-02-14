@@ -28,6 +28,7 @@
     "@polkadot/extension-dapp": "^0.44.8",
     "enquirer": "^2.3.6",
     "jpeg-js": "^0.4.4",
+    "jsonexport": "^3.2.0",
     "magic-bytes.js": "^1.0.13"
   }
 }
