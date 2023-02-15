@@ -93,42 +93,51 @@ const cli = async () => {
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     const iterationTasks = [];
+    // this takes about 5-15ms per file -> not really parallel but sufficient for our purposes
     for (const file in files) {
         iterationTasks.push(addBytesToIpfs(cidVersion, fileAccountMapping[files[file]], files[file], api));
     }
+    
+    console.log(`Uploading ${files.length} files...`)
 
     await Promise.all(iterationTasks);
 
-    console.log(`Uploading ${files.length} files...`)
+    const addressTable = {};
+    for (const file in fileAccountMapping) {
+        addressTable[fileAccountMapping[file].address] = true;
+    }
 
+    let mappingTime = 0;
     let counter = 0;
     await api.query.system.events((events) => {
         events.forEach((record) => {
             const { event } = record;
             if (event.section === "ipfs" && event.method === "AddedCid") {
-                let eventData = event.data;
-                for (const file in fileAccountMapping) {
-                    if (eventData[0].toString() === fileAccountMapping[file].address) {
-                        for (const entry in results) {
-                            if (results[entry].account === fileAccountMapping[file].address) {
-                                results[entry]['return'] = performance.now() - results[entry].submitStart;
-                            }
-                        }
-                        counter++;
-                        if (counter === files.length) {
-                            console.log("All CIDs have been returned. Returning funds to the system account...");
-                            returnFundsToSystemAccount(api, Object.values(fileAccountMapping));
-                            analyzeResults(results);
-                            for (const entry in results) {
-                                delete results[entry].submitStart;
-                                delete results[entry].submitEnd;
-                            }
-                            createCsvFile(results);
-                            return process.exit(1);
-                        }
+                let mappingA = performance.now();
+                const address = event.data[0].toString();
+                if (addressTable[address]) {
+                  for (const entry in results) {
+                    if (results[entry].account === address) {
+                      results[entry]['return'] = performance.now() - results[entry].submitStart;
                     }
+                  }
+                  counter++;
+                  if (counter === files.length) {
+                    console.log(`Mapping time: ${mappingTime}ms`);
+                    console.log("All CIDs have been returned. Returning funds to the system account...");
+                    returnFundsToSystemAccount(api, Object.values(fileAccountMapping));
+                    analyzeResults(results);
+                    for (const entry in results) {
+                      delete results[entry].submitStart;
+                      delete results[entry].submitEnd;
+                    }
+                    createCsvFile(results, counter, fileSizePrompt.fileSize);
+                    return;
+                  }
                 }
-            }
+                let mappingB = performance.now();
+                mappingTime += mappingB - mappingA;
+              }
         });
     })
 }
@@ -137,7 +146,6 @@ async function addBytesToIpfs(cidVersion, fileAccount, file, api) {
     try {
         let rowEntry = {};
         let submitStart = performance.now();
-        console.time(`Returned file for ${fileAccount.address} in: `);
         await ipfsAddBytes(cidVersion, fileAccount, file, api);
         let submitEnd = performance.now()
         rowEntry['fileSize'] = file.length / 1024;
@@ -163,10 +171,11 @@ async function batchFunding(api, accounts) {
     });
 }
 
-const createCsvFile = (data) => {
-    jsonExport(data, function(err, csv){
+const createCsvFile = (data, amount, size) => {
+    jsonExport(data, function (err, csv) {
         if (err) return console.error(err);
-        const name = `benchmark-raw-${Date.now()}.csv`;
+        // name should include timestamp, amount and size
+        const name = `benchmark-${amount}-${size}-${Date.now()}.csv`;
 
         fs.writeFile(name, csv, (err) => {
             if (err) {
