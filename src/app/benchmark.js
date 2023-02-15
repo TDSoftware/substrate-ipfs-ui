@@ -107,13 +107,11 @@ const cli = async () => {
         addressTable[fileAccountMapping[file].address] = true;
     }
 
-    let mappingTime = 0;
     let counter = 0;
     await api.query.system.events((events) => {
         events.forEach((record) => {
             const { event } = record;
             if (event.section === "ipfs" && event.method === "AddedCid") {
-                let mappingA = performance.now();
                 const address = event.data[0].toString();
                 if (addressTable[address]) {
                   for (const entry in results) {
@@ -135,8 +133,6 @@ const cli = async () => {
                     return;
                   }
                 }
-                let mappingB = performance.now();
-                mappingTime += mappingB - mappingA;
               }
         });
     })
