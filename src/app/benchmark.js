@@ -100,7 +100,9 @@ const cli = async () => {
     
     console.log(`Uploading ${files.length} files...`)
 
-    await Promise.all(iterationTasks);
+    await Promise.all(iterationTasks).then(() => {
+        console.log("All files have been uploaded. Waiting for the CIDs to be returned...");
+    });
 
     const addressTable = {};
     for (const file in fileAccountMapping) {
@@ -121,7 +123,6 @@ const cli = async () => {
                   }
                   counter++;
                   if (counter === files.length) {
-                    console.log(`Mapping time: ${mappingTime}ms`);
                     console.log("All CIDs have been returned. Returning funds to the system account...");
                     returnFundsToSystemAccount(api, Object.values(fileAccountMapping));
                     analyzeResults(results);
